@@ -5,7 +5,6 @@ import FloatingToolbar from './FloatingToolbar';
 import { setAllPlantData } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
 
-
     
 const conversionFactors = {
   cm: parseFloat((1/ 0.01).toFixed(5)), // centimeters to meters
