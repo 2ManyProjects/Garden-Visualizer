@@ -9,13 +9,13 @@ function imageExists(name) {
   const imagePath = `/src/assets/${name}.png`;
   const xhr = new XMLHttpRequest();
 
-  xhr.open('HEAD', imagePath, false); // Synchronous request
+  xhr.open('HEAD', imagePath, false); 
 
   try {
       xhr.send();
-      return (xhr.status >= 200 && xhr.status < 300) || xhr.status === 304; // Successful response status
+      return (xhr.status >= 200 && xhr.status < 300) || xhr.status === 304;
   } catch (e) {
-      return false; // An error occurred
+      return false;
   }
 }
 
@@ -28,14 +28,14 @@ const SyncButton = () => {
   //https://docs.google.com/spreadsheets/d/1evjgI_DQb4dlvvIE-fIfPmGCmJtRH796tsgyBQ-I51E/edit?usp=sharing
 
   const fetchSheetData = async () => {
-    const apiKey = 'AIzaSyBJ06eJiBt8FGOg6KH1SQWgLXEikskMqIY'; // Replace with your API key
-    const spreadsheetId = '1evjgI_DQb4dlvvIE-fIfPmGCmJtRH796tsgyBQ-I51E'; // Replace with your Spreadsheet ID
-    const range = 'Plant Data'; // Adjust the range according to your needs
+    const apiKey = 'AIzaSyBJ06eJiBt8FGOg6KH1SQWgLXEikskMqIY'; 
+    const spreadsheetId = '1evjgI_DQb4dlvvIE-fIfPmGCmJtRH796tsgyBQ-I51E'; 
+    const range = 'Plant Data'; 
   
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
   
     try {
-      const response = await axios.get(url);// 'response.data' contains the sheet data
+      const response = await axios.get(url);
       let template = null;
       let plantList = [];
       let plantDictonary = {};
