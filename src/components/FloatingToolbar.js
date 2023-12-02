@@ -68,12 +68,18 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
                     <Button
                       color="primary"
                       startIcon={<Delete />}
-                      onClick={clear}
+                      onClick={()=>{
+                        popupState.close()
+                        clear()
+                      }}
                     />
                     <Button
                       color="primary"
                       startIcon={<SaveIcon />}
-                      onClick={storeData}
+                      onClick={()=>{
+                        popupState.close()
+                        storeData()
+                      }}
                     />
                     <IconButton onClick={handleDownload} color="primary" aria-label="download json">
                       <GetAppIcon />
@@ -82,7 +88,10 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
                     <Button
                       color="secondary"
                       startIcon={<Launch />}
-                      onClick={retrieveData}
+                      onClick={()=>{
+                        popupState.close()
+                        retrieveData()
+                      }}
                     />
                   </Menu>
                 </Box>

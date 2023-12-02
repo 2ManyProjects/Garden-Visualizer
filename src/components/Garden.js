@@ -151,6 +151,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       const jsonValue = JSON.stringify(seshData);
       localStorage.setItem("GardenPlanStorage", jsonValue);
     }else {
+
       let id = uuidv4();
 
       let currentSession = {
@@ -251,6 +252,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     } catch (e) {
       console.error('Failed to save the data to the storage', e);
     }
+
   };
   
   // Function to retrieve data
@@ -289,6 +291,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
               setPlantsInGarden(sesh.data.plantsInGarden);
               dispatch(setAllPlantData({...sesh.data.plants, local: true}));
             }
+            
           },
           open: true
         });
