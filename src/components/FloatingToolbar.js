@@ -5,10 +5,11 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import SaveIcon from '@mui/icons-material/Save';
 import Launch from '@mui/icons-material/Launch';
 import Delete from '@mui/icons-material/Delete';
+import GetAppIcon from '@mui/icons-material/Download';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 
-const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear }) => {
+const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload}) => {
   const [isVisible, setIsVisible] = useState(false);  
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -74,6 +75,9 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
                       startIcon={<SaveIcon />}
                       onClick={storeData}
                     />
+                    <IconButton onClick={handleDownload} color="primary" aria-label="download json">
+                      <GetAppIcon />
+                    </IconButton>
                     {/* Load Button */}
                     <Button
                       color="secondary"

@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Box, Typography, Select, MenuItem, TextField, Button } from '@mui/material';
 
-const DualPurposeModal = ({ modalData, session }) => {
+import { styled } from '@mui/material/styles';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
+
+const DualPurposeModal = ({ modalData, session, retrieveData }) => {
   const { type, selectionData, confirmFunction, open, handleClose } = modalData;
   const [selectedOption, setSelectedOption] = useState('');
   const [newName, setNewName] = useState('');
@@ -67,6 +83,37 @@ const DualPurposeModal = ({ modalData, session }) => {
             fullWidth
           />
         )}
+        {type ==='L' && <Button component="label" variant="contained" startIcon={<CloudUploadIcon />}>
+          Upload file
+          <VisuallyHiddenInput type="file" accept=".json,application/json" onChange={(event)=>{
+            const file = event.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const text = e.target.result;
+                try {
+                  const obj = JSON.parse(text);
+                  let jsonValue = JSON.parse(localStorage.getItem("GardenPlanStorage"));
+                  console.log(obj, jsonValue)
+                  for(let x = 0; x < obj.length; x++){
+                    if(!jsonValue.find(item => item.id === obj[x].id)){
+                      jsonValue.push(obj[x])
+                    }
+                  }
+                  localStorage.setItem("GardenPlanStorage", JSON.stringify(jsonValue));
+                  console.log('STORED JSON object:', jsonValue);
+                  handleClose();
+                  retrieveData();
+                  // Handle the parsed object here (e.g., setting state or calling a prop function)
+                } catch (error) {
+                  console.error('Error parsing JSON:', error);
+                  // Handle errors here
+                }
+              };
+              reader.readAsText(file);
+            }
+          }}/>
+        </Button>}
         <Button
           variant="contained"
           color="primary"

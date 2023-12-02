@@ -133,6 +133,61 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     }
   }
 
+  const loadData = () => {
+
+    const seshArr = localStorage.getItem("GardenPlanStorage");
+    let seshData = seshArr != null ? JSON.parse(seshArr) : [];
+    let sesh = seshData.find(item => { return item.id === curSesh?.id || item.name === curSesh?.id })
+    if(sesh){
+      sesh.dateModified = new Date();
+      let index = seshData.findIndex(item => { return item.id === curSesh.id });
+      sesh.data = {
+        measurementList: measurementList,
+        points: points,
+        plantsInGarden: plantsInGarden,
+        plants: plants,
+      }
+      seshData[index] = sesh;
+      const jsonValue = JSON.stringify(seshData);
+      localStorage.setItem("GardenPlanStorage", jsonValue);
+    }else {
+      let id = uuidv4();
+
+      let currentSession = {
+        id: id,
+        name: curSesh?.name || id || null,
+        dateCreated: curSesh?.dateCreated || new Date(),
+        dateModified: new Date(),
+        data: {
+          measurementList: measurementList,
+          points: points,
+          plantsInGarden: plantsInGarden,
+          plants: plants,
+        }
+      }
+      seshData.push(currentSession);
+      const jsonValue = JSON.stringify(seshData);
+      localStorage.setItem("GardenPlanStorage", jsonValue);
+    }
+    const jsonData = localStorage.getItem('GardenPlanStorage');
+    if (jsonData) {
+      
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `GardenPlanner_${new Date().toISOString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Clean up the URL object
+      URL.revokeObjectURL(url);
+    } else {
+      
+      console.error('No data available to download.');
+    }
+  }
+
   const storeData = () => {
     try {
       const preSavedJson = localStorage.getItem("GardenPlanStorage");
@@ -152,7 +207,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           },
           confirmFunction: (idStr, reName) => {
             const seshArr = localStorage.getItem("GardenPlanStorage");
-            let seshData = seshArr != null ? JSON.parse(seshArr) : null;
+            let seshData = seshArr != null ? JSON.parse(seshArr) : [];
             let sesh = seshData.find(item => { return item.id === idStr || item.name === idStr })
             if(sesh){
               sesh.dateModified = new Date();
@@ -203,7 +258,12 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     try {
       const jsonValue = localStorage.getItem("GardenPlanStorage");
       let obj = jsonValue != null ? JSON.parse(jsonValue) : null;
-      
+      if(!obj){
+        obj = [];
+        localStorage.setItem("GardenPlanStorage", JSON.stringify([]));
+      }
+
+      console.log(obj);
       if(obj){
         setmodalData({
           type: "L",
@@ -894,6 +954,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       setMeasurementList={setMeasurementList}
       gardenDimensions={gardenDimensions}
       retrieveData={retrieveData}
+      handleDownload={loadData}
       storeData={storeData}
       clear={clearData}
       calcArea={()=>{
@@ -901,7 +962,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       }}
       />
       </div>
-      <SaveLoadModal modalData={modalData} session={curSesh}/>
+      <SaveLoadModal modalData={modalData} session={curSesh} retrieveData={retrieveData}/>
     </div>
   );
 };
