@@ -161,7 +161,17 @@ export function EnvironmentalDataModal({session, setLocation}) {
     const apiKey = 'e1f10a1e78da46f5b10a1e78da96f525'; // Replace with your actual API key
     const startDate = new Date().getFullYear() - 1; // Start of your date range
     const endDate = new Date().getFullYear(); 
+    const [locationData, setLocationData] = useState(null);
   
+    useEffect(()=> {
+      const cacheCheck = localStorage.getItem(`GardenPlanStorage-${session.id}-${startDate}-${endDate}`);
+      if(cacheCheck){
+        let returnData = JSON.parse(LZString.decompress(cacheCheck));
+        console.log("HISTORICAL DATA", returnData)
+        setLocationData(returnData)
+      }
+    }, [])
+
     const handleLocationSelect = (latlng) => {
       console.log(latlng); 
       recordLocation({lat: latlng.lat, lon: latlng.lng});
@@ -183,9 +193,9 @@ export function EnvironmentalDataModal({session, setLocation}) {
     };
     return (
       <Box>
-        <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
+        {session?.id && <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
           Location Data
-        </Button>
+        </Button>}
         <Modal open={open} onClose={() => {setOpen(false)}}>
           <Box sx={modalStyle}>
             {session?.data?.coords &&
@@ -200,8 +210,10 @@ export function EnvironmentalDataModal({session, setLocation}) {
             <Button variant="contained" color="primary" onClick={() => setMapModalOpen(true)}>
               Select Location
             </Button>
-            {(location || session?.data?.coords) && <Button variant="contained" color="primary" onClick={() => 
-              fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id)}>
+            {(location || session?.data?.coords) && <Button variant="contained" color="primary" onClick={async() => {
+              let data = await fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id)
+              setLocationData(data);
+              }}>
               Get Location Data
             </Button>}
             <MapModal open={MapModalOpen} coords={session?.data?.coords} location={location}onClose={() => setMapModalOpen(false)} onLocationSelect={handleLocationSelect} />
