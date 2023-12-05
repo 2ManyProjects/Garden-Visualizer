@@ -142,11 +142,11 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       sesh.dateModified = new Date();
       let index = seshData.findIndex(item => { return item.id === curSesh.id });
       sesh.data = {
+        coords: curSesh.data.coords || sesh.data.coords,
         measurementList: measurementList,
         points: points,
         plantsInGarden: plantsInGarden,
-        plants: plants,
-        coords: curSesh.coords
+        plants: plants
       }
       seshData[index] = sesh;
       const jsonValue = JSON.stringify(seshData);
@@ -165,7 +165,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           points: points,
           plantsInGarden: plantsInGarden,
           plants: plants,
-          coords: curSesh.coords
+          coords: curSesh.data.coords
         }
       }
       seshData.push(currentSession);
@@ -205,7 +205,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
         points: points,
         plantsInGarden: plantsInGarden,
         plants: plants,
-        coords: curSesh.coords
+        coords: curSesh.data.coords || sesh.data.coords
       }
       seshData[index] = sesh;
       const jsonValue = JSON.stringify(seshData);
@@ -222,6 +222,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           points: points,
           plantsInGarden: plantsInGarden,
           plants: plants,
+          coords: curSesh.data.coords
         }
       }
       seshData.push(currentSession);
@@ -257,11 +258,11 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
               if(reName)
               sesh.name = idStr;
               sesh.data = {
+                coords: curSesh.data.coords || sesh.data.coords,
                 measurementList: measurementList,
                 points: points,
                 plantsInGarden: plantsInGarden,
-                plants: plants,
-                coords: curSesh.coords
+                plants: plants
               }
               seshData[index] = sesh;
               const jsonValue = JSON.stringify(seshData);
@@ -278,7 +279,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
                   points: points,
                   plantsInGarden: plantsInGarden,
                   plants: plants,
-                  coords: curSesh.coords
+                  coords: curSesh.data.coords
                 }
               }
               seshData.push(currentSession);

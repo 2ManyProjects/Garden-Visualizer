@@ -97,7 +97,10 @@ async function fetchHistoricalWeatherData(apiKey, latitude, longitude, startDate
   const almanacData = [];
   let stationId = null;
   let stationName = null;
-  //https://api.weather.com/v2/astro?apiKey=e1f10a1e78da46f5b10a1e78da96f525&geocode=48.37%2C-89.33&days=10&date=20231203&format=json
+  //`https://api.weather.com/v1/location/${weatherStationRequest.data.location.icaoCode[1]}:9:CA/almanac/daily.json?apiKey=${apiKey}&units=m&start=${String(month).padStart(2, '0')}01&end=${String(month).padStart(2, '0')}${new Date(year, month, 0).getDate()}`
+  // let alUrl = `https://api.weather.com/v3/wx/almanac/monthly/1month?icaoCode=${weatherStationRequest.data.location.icaoCode[1]}&format=json&units=m&month=${1}&apiKey=${apiKey}`;
+  // const alResp = await axios.get(alUrl);
+  // console.log(alResp)
   for (let year = startDate; year <= endDate; year++) {
     // let aggUrl = `https://api.weather.com/v2/astro?apiKey=${apiKey}&geocode=${latitude},${longitude}&days=${30}&date=${year}0101&format=json`
     // const aggResponse = await axios.get(aggUrl);
@@ -106,13 +109,20 @@ async function fetchHistoricalWeatherData(apiKey, latitude, longitude, startDate
     for (let month = 1; month <= 12; month++) {
       const dateString = `${year}${String(month).padStart(2, '0')}`;
       if(year === startDate){
-        let almanacUrl = `https://api.weather.com/v1/location/${weatherStationRequest.data.location.icaoCode[1]}:9:CA/almanac/daily.json?apiKey=${apiKey}&units=m&start=${String(month).padStart(2, '0')}01&end=${String(month).padStart(2, '0')}${new Date(year, month, 0).getDate()}`
+        let almanacUrl = `https://api.weather.com/v3/wx/almanac/monthly/1month?icaoCode=${weatherStationRequest.data.location.icaoCode[1]}&format=json&units=m&month=${month}&apiKey=${apiKey}`
         const alResponse = await axios.get(almanacUrl);
-        if(alResponse.data.metadata.status_code === 200){
-          almanacData.push(alResponse.data.almanac_summaries);
+        if(alResponse.status === 200){
+          let alObj = {}
+          let keys = Object.keys(alResponse.data);
+
+          for(let x = 0; x < keys.length; x++){
+            alObj[keys[x]] = alResponse.data[keys[x]][0] || null;
+          }
+
+          almanacData.push(alObj);
           if(!stationId){
-            stationId = alResponse.data.almanac_summaries[0].station_id
-            stationName = alResponse.data.almanac_summaries[0].station_name
+            stationId = alObj.stationId
+            stationName = alObj.stationName
           }
         }
 
