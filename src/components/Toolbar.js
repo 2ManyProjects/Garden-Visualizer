@@ -29,11 +29,14 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
       kReq: 0,
       nReq: 0
     };
+    // console.log("plantsInGarden Change");
     if(plantMacros){
+      // console.log("plantMacros", plantMacros);
       for(let  x = 0; x < plantsInGarden.length; x++){
         let plant = plantsInGarden[x];
         let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
         let macro = plantMacros?.plantMacroRequirements[plant.cropType];
+        // console.log(macro, plant)
         if(macro?.nReq){
           let nLoad = crownArea * parseFloat(macro.nReq);
           analysisData.nReq += nLoad;
@@ -42,8 +45,10 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
           let kLoad = crownArea * parseFloat(macro.kReq);
           analysisData.kReq += kLoad;
         }
+        // console.log(analysisData)
       }
     }else {
+      // console.log("NoplantMacros");
       fetchSheetData();
     }
     if(!gardenAnalysis || gardenAnalysis.kReq !== analysisData.kReq || gardenAnalysis.nReq !== analysisData.nReq){
