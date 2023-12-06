@@ -1,12 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
+  currentSession: {},
   permRoles: [],
   selectedPermRole: null,
   selectedPlants: [],
   selectedPlant: null,
   plants: null,
-  isVisible: true
+  isVisible: true,
+  plantMacros: null
 };
 
 export const gardenSlice = createSlice({
@@ -56,13 +58,23 @@ export const gardenSlice = createSlice({
       state.plants = localdata;
     },
     setRoles: (state, action) => {
-        state.permRoles = action.payload;
-    }
-    // Other reducers...
+      state.permRoles = action.payload;
+    },
+    setPlantMacroData: (state, action) => {
+      state.plantMacros = action.payload;
+    },
+    setCurrentSession: (state, action) => {
+      console.log(setCurrentSession, action)
+      state.currentSession = action.payload.data;
+      // setTimeout(() => {
+      //   if(action.payload.storeSession)
+      //     action.payload.storeSession(true);
+      // }, 50)
+    },
   },
 });
  
   
-  export const { setPermRole, toggleVisibility, setAllPlantData, setRoles, setSelectedPlant} = gardenSlice.actions;
+  export const { setPermRole, setPlantMacroData, toggleVisibility, setAllPlantData, setRoles, setSelectedPlant, setCurrentSession} = gardenSlice.actions;
   
   export default gardenSlice.reducer;

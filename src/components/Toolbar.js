@@ -82,7 +82,7 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
          
       </Select>
     </FormControl> }
-      {selectedPlants.length > 0 && <PlantIcons isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />} 
+      {selectedPlants?.length > 0 && <PlantIcons isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />} 
       {/* {selectedPlants.length > 0 && <Button onClick={handleVisibilityToggle}>Toggle Visibility</Button>} */}
       {selectedPlant && <Button onClick={handleOpen}>Info/Plant Config</Button>}
       <Button onClick={toggleEdit}>{isEditing ? '- Points' : '+ Points'}</Button>

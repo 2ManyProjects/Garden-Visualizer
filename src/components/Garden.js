@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
-import { setAllPlantData } from '../redux/gardenSlice'; // Import setPlantData
+import { setAllPlantData, setCurrentSession } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
 
     
@@ -16,7 +16,7 @@ const conversionFactors = {
   ha: parseFloat((1/ 100).toFixed(5)), // acre to meters
 };
 const pixelsPerMeter = 10;
-var curSesh = {};
+
 const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const dispatch = useDispatch();
   const [modalData, setmodalData] = useState({
@@ -39,7 +39,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
   const [scale, setScale] = useState(1);
-  const { permRoles, selectedPlants, selectedPlant, selectedPermRole, plants } = useSelector(state => state.garden); 
+  const { permRoles, selectedPlants, selectedPlant, selectedPermRole, plants, plantMacros, currentSession } = useSelector(state => state.garden); 
   const svgRef = useRef();
   useEffect(() => {
     setPoints([]);
@@ -121,28 +121,30 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   }, [handleKeyPress]);
 
   const clearData = () => {
-    if(curSesh && curSesh.id){
+    if(currentSession && currentSession.id){
       const seshArr = localStorage.getItem("GardenPlanStorage");
       let seshData = seshArr != null ? JSON.parse(seshArr) : [];
 
-      let seshIndex = seshData.findIndex(item => item.id === curSesh.id)
+      let seshIndex = seshData.findIndex(item => item.id === currentSession.id)
       if(seshIndex !== -1){
-        localStorage.setItem("GardenPlanStorage", JSON.stringify(seshData.filter(item => item.id !== curSesh.id)));
+        console.log("clearData", seshData.length);
+        localStorage.setItem("GardenPlanStorage", JSON.stringify(seshData.filter(item => item.id !== currentSession.id)));
 
       }
     }
   }
 
   const loadData = () => {
-
+    console.log("loadData")
     const seshArr = localStorage.getItem("GardenPlanStorage");
     let seshData = seshArr != null ? JSON.parse(seshArr) : [];
-    let sesh = seshData.find(item => { return item.id === curSesh?.id || item.name === curSesh?.id })
+    let sesh = seshData.find(item => { return item.id === currentSession?.id || item.name === currentSession?.id })
+    console.log("loadData", seshData.length);
     if(sesh){
       sesh.dateModified = new Date();
-      let index = seshData.findIndex(item => { return item.id === curSesh.id });
+      let index = seshData.findIndex(item => { return item.id === currentSession.id });
       sesh.data = {
-        coords: curSesh.data.coords || sesh.data.coords,
+        coords: currentSession?.data?.coords || sesh.data.coords,
         measurementList: measurementList,
         points: points,
         plantsInGarden: plantsInGarden,
@@ -150,26 +152,29 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       }
       seshData[index] = sesh;
       const jsonValue = JSON.stringify(seshData);
+      console.log("loadData1", seshData.length);
       localStorage.setItem("GardenPlanStorage", jsonValue);
     }else {
 
       let id = uuidv4();
 
-      let currentSession = {
+      let cSession = {
         id: id,
-        name: curSesh?.name || id || null,
-        dateCreated: curSesh?.dateCreated || new Date(),
+        name: currentSession?.name || id || null,
+        dateCreated: currentSession?.dateCreated || new Date(),
         dateModified: new Date(),
         data: {
           measurementList: measurementList,
           points: points,
           plantsInGarden: plantsInGarden,
           plants: plants,
-          coords: curSesh.data.coords
+          coords: currentSession?.data?.coords || null
         }
       }
-      seshData.push(currentSession);
+      seshData.push(cSession);
+      dispatch(setCurrentSession({data: cSession}))
       const jsonValue = JSON.stringify(seshData);
+      console.log("loadData2", seshData.length);
       localStorage.setItem("GardenPlanStorage", jsonValue);
     }
     const jsonData = localStorage.getItem('GardenPlanStorage');
@@ -192,41 +197,46 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   }
 
 
-  const storeSession = () => {
+  const storeSession = (skip = false) => {
 
     const seshArr = localStorage.getItem("GardenPlanStorage");
     let seshData = seshArr != null ? JSON.parse(seshArr) : [];
-    let sesh = seshData.find(item => { return item.id === curSesh?.id || item.name === curSesh?.id })
+    console.log("storeSession", seshData.length);
+    let sesh = seshData.find(item => { return item.id === currentSession?.id || item.name === currentSession?.id })
     if(sesh){
       sesh.dateModified = new Date();
-      let index = seshData.findIndex(item => { return item.id === curSesh?.id || item.name === curSesh?.id });
+      let index = seshData.findIndex(item => { return item.id === currentSession?.id || item.name === currentSession?.id });
       sesh.data = {
         measurementList: measurementList,
         points: points,
         plantsInGarden: plantsInGarden,
         plants: plants,
-        coords: curSesh.data.coords || sesh.data.coords
+        coords: currentSession?.data?.coords || sesh.data.coords
       }
       seshData[index] = sesh;
       const jsonValue = JSON.stringify(seshData);
+      console.log("storeSession1", seshData.length);
       localStorage.setItem("GardenPlanStorage", jsonValue);
     }else {
-
-      let currentSession = {
+      console.log(currentSession)
+      let cSession = {
         id: uuidv4(),
-        name: curSesh?.name || null,
-        dateCreated: curSesh?.dateCreated || new Date(),
+        name: currentSession?.name || null,
+        dateCreated: currentSession?.dateCreated || new Date(),
         dateModified: new Date(),
         data: {
           measurementList: measurementList,
           points: points,
           plantsInGarden: plantsInGarden,
           plants: plants,
-          coords: curSesh.data.coords
+          coords: currentSession?.data?.coords || null
         }
       }
-      seshData.push(currentSession);
+      seshData.push(cSession);
+      if(!skip)
+        dispatch(setCurrentSession({data: cSession}))
       const jsonValue = JSON.stringify(seshData);
+      console.log("storeSession2", seshData.length);
       localStorage.setItem("GardenPlanStorage", jsonValue);
     }
   }
@@ -251,6 +261,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           confirmFunction: (idStr, reName) => {
             const seshArr = localStorage.getItem("GardenPlanStorage");
             let seshData = seshArr != null ? JSON.parse(seshArr) : [];
+            console.log("storeData0", seshData.length);
             let sesh = seshData.find(item => { return item.id === idStr || item.name === idStr })
             if(sesh){
               sesh.dateModified = new Date();
@@ -258,7 +269,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
               if(reName)
               sesh.name = idStr;
               sesh.data = {
-                coords: curSesh.data.coords || sesh.data.coords,
+                coords: currentSession?.data?.coords || sesh.data.coords,
                 measurementList: measurementList,
                 points: points,
                 plantsInGarden: plantsInGarden,
@@ -266,24 +277,27 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
               }
               seshData[index] = sesh;
               const jsonValue = JSON.stringify(seshData);
+              console.log("storeData1", seshData.length);
               localStorage.setItem("GardenPlanStorage", jsonValue);
             }else {
 
-              let currentSession = {
+              let cSession = {
                 id: uuidv4(),
-                name: idStr || curSesh?.name || null,
-                dateCreated: curSesh?.dateCreated || new Date(),
+                name: idStr || currentSession?.name || null,
+                dateCreated: currentSession?.dateCreated || new Date(),
                 dateModified: new Date(),
                 data: {
                   measurementList: measurementList,
                   points: points,
                   plantsInGarden: plantsInGarden,
                   plants: plants,
-                  coords: curSesh.data.coords
+                  coords: currentSession?.data?.coords || null
                 }
               }
-              seshData.push(currentSession);
+              dispatch(setCurrentSession({data: cSession}))
+              seshData.push(cSession);
               const jsonValue = JSON.stringify(seshData);
+              console.log("storeData2", seshData.length);
               localStorage.setItem("GardenPlanStorage", jsonValue);
             }
           },
@@ -299,7 +313,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
 
   };
   
-  // Function to retrieve data
+  //load session data
   const retrieveData = () => {
     try {
       const jsonValue = localStorage.getItem("GardenPlanStorage");
@@ -327,17 +341,19 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
             let seshData = seshArr != null ? JSON.parse(seshArr) : null;
             let sesh = seshData.find(item => { return item.id === idStr || item.name === idStr })
             if(sesh){
-              curSesh.id = sesh.id;
-              curSesh.name = sesh.name;
-              curSesh.dateCreated = sesh.dateCreated;
-              curSesh.data = {};
+              let temp = {...currentSession};
+              temp.id = sesh.id;
+              temp.name = sesh.name;
+              temp.dateCreated = sesh.dateCreated;
+              temp.data = {};
               if(sesh?.data?.coords){
-                curSesh.data.coords = {...sesh.data.coords};
+                temp.data.coords = {...sesh.data.coords};
               }
               setPoints(sesh.data.points);
               setMeasurementList(sesh.data.measurementList);
               setPlantsInGarden(sesh.data.plantsInGarden);
               dispatch(setAllPlantData({...sesh.data.plants, local: true}));
+              dispatch(setCurrentSession({data: temp, storeSession: storeSession}));
             }
             
           },
@@ -833,7 +849,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const baseFontSize = 8; // Base font size in pixels
   const baseEdgeVertSize = 8;
   const baseStrokeSize = 2;
-  let adjustedFontSize = Math.max(baseFontSize / (scale), 20);
+  let adjustedFontSize = Math.max(baseFontSize / (scale), (1/scale) * 35);
   let adjustedEdgeVertSize = Math.min(baseEdgeVertSize / (scale*scale), 20);
   let adjustedStrokeSize = baseStrokeSize / (scale);
 
@@ -997,10 +1013,14 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     }}>
       <FloatingToolbar 
       setLocation={(coords) => {
-        curSesh.data.coords = {lat: coords.lat, lon: coords.lon};
-        storeSession();
+        let sesh = JSON.parse(JSON.stringify(currentSession))
+        sesh.data.coords = {lat: coords.lat, lon: coords.lon};
+        dispatch(setCurrentSession({data: sesh, storeSession: storeSession}))
+
+        // curSesh.data.coords = {lat: coords.lat, lon: coords.lon};
+        // storeSession();
       }}
-      session={curSesh}
+      session={currentSession}
       measurementList={measurementList} 
       selectedMeasurement={selectedMeasurement} 
       handleDeleteMeasurement={handleDeleteMeasurement} 
@@ -1018,7 +1038,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       }}
       />
       </div>
-      <SaveLoadModal modalData={modalData} session={curSesh} retrieveData={retrieveData}/>
+      <SaveLoadModal modalData={modalData} session={currentSession} retrieveData={retrieveData}/>
     </div>
   );
 };

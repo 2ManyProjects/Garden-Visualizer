@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { setAllPlantData, setRoles } from '../redux/gardenSlice';
+import { setAllPlantData, setRoles, setPlantMacroData } from '../redux/gardenSlice';
 import axios from 'axios'; 
 import {   Button } from '@mui/material';
 
@@ -30,9 +30,9 @@ const SyncButton = () => {
   const fetchSheetData = async () => {
     const apiKey = 'AIzaSyBJ06eJiBt8FGOg6KH1SQWgLXEikskMqIY'; 
     const spreadsheetId = '1evjgI_DQb4dlvvIE-fIfPmGCmJtRH796tsgyBQ-I51E'; 
-    const range = 'Plant Data'; 
+    let range = 'Plant Data'; 
   
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+    let url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
   
     try {
       const response = await axios.get(url);
@@ -73,6 +73,39 @@ const SyncButton = () => {
       // console.log(plantDictonary);
       dispatch(setRoles(Object.keys(plantDictonary)));
       dispatch(setAllPlantData(plantDictonary));
+      range = 'Plant Macros'; 
+    
+      url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+      let macroData = await axios.get(url);
+      let plantMacroRequirements = {};
+      let plantMacroSources = {};
+      template = null;
+      let dataSourceIndex = 0;
+      for(let x = 0; x < macroData.data?.values.length; x++){
+        if([0, 4].includes(x)){
+          template = macroData.data?.values[x];
+          dataSourceIndex += 1;
+          continue;
+        }
+        let plantMacroRequirement = {};
+        let plantMacroSource = {};
+        let cell = macroData.data?.values[x];
+        for(let y = 0; y < template.length; y++){
+          if(dataSourceIndex === 1){
+            plantMacroRequirement[template[y]] = cell[y] || null;
+          }else if(dataSourceIndex === 2){
+            plantMacroSource[template[y]] = cell[y] || null;
+          }
+        }        
+        if(dataSourceIndex === 1){
+          plantMacroRequirements[plantMacroRequirement.cropType] = plantMacroRequirement || null;
+        }else if(dataSourceIndex === 2){
+          plantMacroSources[plantMacroSource.Source] = plantMacroSource || null;
+        }
+      }
+      dispatch(setPlantMacroData({plantMacroRequirements, plantMacroSources}));
+
+
     } catch (error) {
       console.error('Error fetching sheet data:', error);
     }
