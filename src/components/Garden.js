@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
-import { setAllPlantData, setCurrentSession } from '../redux/gardenSlice'; // Import setPlantData
+import { setAllPlantData, setCurrentSession, setPlantsInGarden } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
 
     
@@ -27,7 +27,6 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   });
   const [measurementList, setMeasurementList] = useState([]);
   const [points, setPoints] = useState([]);
-  const [plantsInGarden, setPlantsInGarden] = useState([]);
   const [selectedMeasurement, setSelectedMeasurement] = useState(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState(null);
   const [lastSelectedPointIndex, setLastSelectedPointIndex] = useState(null);
@@ -39,18 +38,18 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
   const [scale, setScale] = useState(1);
-  const { permRoles, selectedPlants, selectedPlant, selectedPermRole, plants, plantMacros, currentSession } = useSelector(state => state.garden); 
+  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, selectedPermRole, plants, plantMacros, currentSession } = useSelector(state => state.garden); 
   const svgRef = useRef();
   useEffect(() => {
     setPoints([]);
     setSelectedPointIndex(null);
     setLastSelectedPointIndex(null);
-    setPlantsInGarden([]);
+    dispatch(setPlantsInGarden([]));
   }, [clearGarden])
   
   useEffect(() => {
     const newPlantsInGarden = plantsInGarden.filter(plant => isInsidePolygon({ x: plant.x, y: plant.y }, points));
-    setPlantsInGarden(newPlantsInGarden);
+    dispatch(setPlantsInGarden(newPlantsInGarden));
   }, [points]);
   useEffect(() => {
     return () => {
@@ -87,7 +86,6 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   }, [setScale, viewBox, setViewBox]);
 
   const handleKeyPress = useCallback((e) => {
-    const step = 10;
     let newX = parseFloat(svgRef.current.viewBox.baseVal.x);
     let newY = parseFloat(svgRef.current.viewBox.baseVal.y);
     switch(e.key) {
@@ -351,7 +349,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
               }
               setPoints(sesh.data.points);
               setMeasurementList(sesh.data.measurementList);
-              setPlantsInGarden(sesh.data.plantsInGarden);
+              dispatch(setPlantsInGarden(sesh.data.plantsInGarden));
               dispatch(setAllPlantData({...sesh.data.plants, local: true}));
               dispatch(setCurrentSession({data: temp, storeSession: storeSession}));
             }
@@ -470,12 +468,15 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       // Check if the point is inside the garden
       if (selectedPlantIndex === null && isInsidePolygon(cursorpt, points)) {
         let spread = parseAndGenerateNumber(selectedPlant["Crown Spread (m)"]);
+        // console.log("handleSvgClick", selectedPlant);
         const newPlant = {
           id: `${selectedPlant.Latin}#${uuidv4()}`,
           x: cursorpt.x,
           y: cursorpt.y,
+          cropType: selectedPlant["Crop Type"],
           lifespan: selectedPlant["usrLifespan"]  ||  parseAndGenerateNumber(selectedPlant["Lifespan"]),
           rootDepth: selectedPlant["usrRoot Depth (m)"]  ||  parseAndGenerateNumber(selectedPlant["Root Depth (m)"]),
+          crownDia: selectedPlant["usrCrown Spread (m)"] ? parseFloat(selectedPlant["usrCrown Spread (m)"]): parseAndGenerateNumber(selectedPlant["Crown Spread (m)"], 1),
           crownSpread: selectedPlant["usrCrown Spread (m)"] ? calculateCrownSpread(selectedPlant["usrCrown Spread (m)"] , gardenDimensions):  calculateCrownSpread(spread, gardenDimensions),
           height: selectedPlant["usrMax Height"]  ||  selectedPlant["Max Height"],
           sheetIndex: selectedPlant.sheetIndex,
@@ -486,7 +487,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           // ...selectedPlant
         };
       
-        setPlantsInGarden([...plantsInGarden, newPlant])
+        dispatch(setPlantsInGarden([...plantsInGarden, newPlant]))
       }
     }
 
@@ -508,11 +509,19 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     return inside;
   }
 
-  function parseAndGenerateNumber(input) {
+  function parseAndGenerateNumber(input, check = 0) {
     // Check if input contains a range indicated by a hyphen
     if (input.includes('-')) {
       // Split the string into start and end of the range
       const [start, end] = input.split('-').map(item => parseFloat(item));
+      if([-1, 1].includes(check)){
+        if(check === -1){
+          return start;
+        }else if(check === 1){
+          return end;
+        }
+
+      }
       // Generate a random integer within the range
       return Math.random() * (end - start) + start
     } else {
@@ -581,7 +590,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
         // check local Edit list
         setSelectedPlantIndex(index);
       }else if(e.button === 2) {
-        setPlantsInGarden(plantsInGarden.filter((_, i) => i !== index));
+        dispatch(setPlantsInGarden(plantsInGarden.filter((_, i) => i !== index)));
       }
     }
   };
@@ -671,12 +680,12 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
         cursorpt.x /= scale;
         cursorpt.y /= scale;
 
-        setPlantsInGarden(plantsInGarden.map((plant, index) => {
+        dispatch(setPlantsInGarden(plantsInGarden.map((plant, index) => {
           if (index === selectedPlantIndex) {
             return { ...plant, x: cursorpt.x, y: cursorpt.y };
           }
           return plant;
-        }));
+        })));
       }
 
       if (selectedPointIndex !== null) {
@@ -711,7 +720,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     if (selectedPlantIndex != null && plantsInGarden[selectedPlantIndex]) {
       const selPlant = plantsInGarden[selectedPlantIndex];
       if (!isInsidePolygon({ x: selPlant.x, y: selPlant.y }, points)) {
-        setPlantsInGarden(plantsInGarden.filter((_, index) => index !== selectedPlantIndex));
+        dispatch(setPlantsInGarden(plantsInGarden.filter((_, index) => index !== selectedPlantIndex)));
       }
       
       if(selectedPlantIndex !== null){

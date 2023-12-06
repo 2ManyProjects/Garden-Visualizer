@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // For generating GUIDs
 import { useDispatch, useSelector } from 'react-redux';
-import { setPermRole, toggleVisibility, setSelectedPlant } from '../redux/gardenSlice'; // Import setPlantData
+import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis } from '../redux/gardenSlice'; // Import setPlantData
 import SyncButton from './SyncButton';
 import PlantIcons from './PlantIcons';
 import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography,  } from '@mui/material';
@@ -10,7 +10,7 @@ import Toolbar from '@mui/material/Toolbar';
 const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
-  const { permRoles, selectedPlants, selectedPlant } = useSelector(state => state.garden);
+  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, plantMacros, gardenAnalysis } = useSelector(state => state.garden);
   const [selectedPermRole, setSelectedPermRole] = useState('');
   const [open, setOpen] = useState(false);
   const [keys, showKeys] = useState(false);
@@ -24,12 +24,34 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   useEffect(() => {
+    let analysisData = {
+      kReq: 0,
+      nReq: 0
+    };
+    for(let  x = 0; x < plantsInGarden.length; x++){
+      let plant = plantsInGarden[x];
+      let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
+      let macro = plantMacros.plantMacroRequirements[plant.cropType];
+      if(macro.nReq){
+        let nLoad = crownArea * parseFloat(macro.nReq);
+        analysisData.nReq += nLoad;
+      }
+      if(macro.kReq){
+        let kLoad = crownArea * parseFloat(macro.kReq);
+        analysisData.kReq += kLoad;
+      }
+    }
+    if(!gardenAnalysis || gardenAnalysis.kReq !== analysisData.kReq || gardenAnalysis.nReq !== analysisData.nReq){
+      dispatch(setGardenAnalysis({...(gardenAnalysis || {}), ...analysisData}))
+    }
+  }, [plantsInGarden]);
+  useEffect(() => {
     setIsPlantSelectorEnabled(Boolean(unit));
 
     if(Boolean(unit)){
         onGardenDimensionsChange(unit)
     }
-  }, [  unit]);
+  }, [unit]);
   
   const handlePermRoleChange = (event) => {
     setSelectedPermRole(event.target.value);
@@ -90,6 +112,10 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
         clearGarden(true)
         setTimeout(() => { clearGarden(false)}, 50)
         }}>Clear Garden</Button>
+      {gardenAnalysis && <Box>
+        <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g, K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
+        
+      </Box>}
 
       {selectedPlant && <Modal
         open={open}

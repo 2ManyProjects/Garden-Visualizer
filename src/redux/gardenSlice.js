@@ -8,7 +8,9 @@ const initialState = {
   selectedPlant: null,
   plants: null,
   isVisible: true,
-  plantMacros: null
+  plantMacros: null,
+  plantsInGarden: [],
+  gardenAnalysis: null
 };
 
 export const gardenSlice = createSlice({
@@ -19,6 +21,12 @@ export const gardenSlice = createSlice({
         state.selectedPermRole = action.payload;
         if(state.plants)
             state.selectedPlants = state.plants[action.payload];
+    },
+    setGardenAnalysis: (state, action) => {
+        state.gardenAnalysis = action.payload;
+    },
+    setPlantsInGarden: (state, action) => {
+        state.plantsInGarden = action.payload;
     },
     setSelectedPlant: (state, action) => {
       let local = action.payload?.local;
@@ -75,6 +83,6 @@ export const gardenSlice = createSlice({
 });
  
   
-  export const { setPermRole, setPlantMacroData, toggleVisibility, setAllPlantData, setRoles, setSelectedPlant, setCurrentSession} = gardenSlice.actions;
+  export const { setPermRole, setPlantMacroData, setGardenAnalysis, setPlantsInGarden,  toggleVisibility, setAllPlantData, setRoles, setSelectedPlant, setCurrentSession} = gardenSlice.actions;
   
   export default gardenSlice.reducer;
