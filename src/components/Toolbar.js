@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // For generating GUIDs
 import { useDispatch, useSelector } from 'react-redux';
-import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis } from '../redux/gardenSlice'; // Import setPlantData
+import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis, setPlantMacroData } from '../redux/gardenSlice'; // Import setPlantData
 import SyncButton from './SyncButton';
 import PlantIcons from './PlantIcons';
 import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography,  } from '@mui/material';
+import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
 
 const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
@@ -28,18 +29,22 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
       kReq: 0,
       nReq: 0
     };
-    for(let  x = 0; x < plantsInGarden.length; x++){
-      let plant = plantsInGarden[x];
-      let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
-      let macro = plantMacros.plantMacroRequirements[plant.cropType];
-      if(macro.nReq){
-        let nLoad = crownArea * parseFloat(macro.nReq);
-        analysisData.nReq += nLoad;
+    if(plantMacros){
+      for(let  x = 0; x < plantsInGarden.length; x++){
+        let plant = plantsInGarden[x];
+        let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
+        let macro = plantMacros?.plantMacroRequirements[plant.cropType];
+        if(macro?.nReq){
+          let nLoad = crownArea * parseFloat(macro.nReq);
+          analysisData.nReq += nLoad;
+        }
+        if(macro?.kReq){
+          let kLoad = crownArea * parseFloat(macro.kReq);
+          analysisData.kReq += kLoad;
+        }
       }
-      if(macro.kReq){
-        let kLoad = crownArea * parseFloat(macro.kReq);
-        analysisData.kReq += kLoad;
-      }
+    }else {
+      fetchSheetData();
     }
     if(!gardenAnalysis || gardenAnalysis.kReq !== analysisData.kReq || gardenAnalysis.nReq !== analysisData.nReq){
       dispatch(setGardenAnalysis({...(gardenAnalysis || {}), ...analysisData}))
@@ -52,6 +57,54 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
         onGardenDimensionsChange(unit)
     }
   }, [unit]);
+
+
+
+  const fetchSheetData = async () => {
+    const apiKey = 'AIzaSyBJ06eJiBt8FGOg6KH1SQWgLXEikskMqIY'; 
+    const spreadsheetId = '1evjgI_DQb4dlvvIE-fIfPmGCmJtRH796tsgyBQ-I51E'; 
+    let range = 'Plant Macros'; 
+  
+    let url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+  
+    try {
+      let template = null;
+      
+      let macroData = await axios.get(url);
+      let plantMacroRequirements = {};
+      let plantMacroSources = {};
+      template = null;
+      let dataSourceIndex = 0;
+      for(let x = 0; x < macroData.data?.values.length; x++){
+        if(["cropType", "Source"].includes(macroData.data?.values[x][0])){
+          template = macroData.data?.values[x];
+          dataSourceIndex += 1;
+          continue;
+        }
+        let plantMacroRequirement = {};
+        let plantMacroSource = {};
+        let cell = macroData.data?.values[x];
+        for(let y = 0; y < template.length; y++){
+          if(dataSourceIndex === 1){
+            plantMacroRequirement[template[y]] = cell[y] || null;
+          }else if(dataSourceIndex === 2){
+            plantMacroSource[template[y]] = cell[y] || null;
+          }
+        }        
+        if(dataSourceIndex === 1){
+          plantMacroRequirements[plantMacroRequirement.cropType] = plantMacroRequirement || null;
+        }else if(dataSourceIndex === 2){
+          plantMacroSources[plantMacroSource.Source] = plantMacroSource || null;
+        }
+      }
+      dispatch(setPlantMacroData({plantMacroRequirements, plantMacroSources}));
+
+
+    } catch (error) {
+      console.error('Error fetching sheet data:', error);
+    }
+  }; 
+
   
   const handlePermRoleChange = (event) => {
     setSelectedPermRole(event.target.value);

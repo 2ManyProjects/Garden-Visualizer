@@ -72,7 +72,7 @@ export const gardenSlice = createSlice({
       state.plantMacros = action.payload;
     },
     setCurrentSession: (state, action) => {
-      console.log(setCurrentSession, action)
+      // console.log(setCurrentSession, action)
       state.currentSession = action.payload.data;
       // setTimeout(() => {
       //   if(action.payload.storeSession)
