@@ -215,9 +215,9 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
               <Typography sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} key={index} fontWeight="bold">
                 {typeof selectedPlant[item] !== "object" && `${item}:  ${selectedPlant[item] }`}
                 {selectedPlant[item] && typeof selectedPlant[item] === "object" && <Box>
-                    <Typography  sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} variant="h8" component="h3">
-                    {item}
-                    </Typography>
+                  <Typography  sx={{ textDecoration: 'underline', display: 'flex',justifyContent: 'center',alignItems: 'center'}} variant="h8" component="h3">
+                  {item}
+                  </Typography>
                   {Object.keys(selectedPlant[item]).map((key, keyIndex) => {
                   return(
                     <Typography key={keyIndex} fontWeight="bold">
