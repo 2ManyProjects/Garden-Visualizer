@@ -239,6 +239,26 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     }
   }
 
+  const clearPlantData = () => {
+    const seshArr = localStorage.getItem("GardenPlanStorage");
+    let seshData = seshArr != null ? JSON.parse(seshArr) : []; 
+    let sesh = seshData.find(item => { return item.id === currentSession.id || item.name === currentSession.id })
+    if(sesh){
+      sesh.dateModified = new Date();
+      let index = seshData.findIndex(item => { return item.id === currentSession.id || item.name === currentSession.id });
+      sesh.data = {
+        coords: currentSession?.data?.coords || sesh.data.coords,
+        measurementList: measurementList,
+        points: points,
+        plantsInGarden: [],
+        plants: null
+      }
+      seshData[index] = sesh;
+      const jsonValue = JSON.stringify(seshData); 
+      localStorage.setItem("GardenPlanStorage", jsonValue);
+    }
+  }
+
   const storeData = () => {
     try {
       const preSavedJson = localStorage.getItem("GardenPlanStorage");
@@ -885,12 +905,12 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           <text x={textX} y={lineHeight * 5} fontWeight="bold">
             {`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`}
           </text>
-          <text x={textX} y={lineHeight * 6} fontWeight="bold">
-            {`fontSize: ${adjustedFontSize}`}
+          {/* <text x={textX} y={lineHeight * 6} fontWeight="bold">
+            {`fontSize: ${adjustedFontSize.toFixed(2)}`}
           </text>
           <text x={textX} y={lineHeight * 7} fontWeight="bold">
-            {`vertSize: ${adjustedEdgeVertSize}`}
-          </text>
+            {`vertSize: ${adjustedEdgeVertSize.toFixed(2)}`}
+          </text> */}
           {/* <text x={textX} y={lineHeight * 10} fontWeight="bold">
             {`selectedPointIndex: ${selectedPointIndex}`}
           </text>
@@ -1042,6 +1062,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       handleDownload={loadData}
       storeData={storeData}
       clear={clearData}
+      clearPlantData={clearPlantData}
       calcArea={()=>{
         return selectedMeasurement !== null ?  (calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]) : null
       }}

@@ -10,7 +10,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { EnvironmentalDataModal } from './EnvironmentalDataModal';
 
 
-const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation}) => {
+const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData}) => {
   const [isVisible, setIsVisible] = useState(false);  
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -95,6 +95,11 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
                       }}
                     />
                     <EnvironmentalDataModal session={session} setLocation={setLocation}/>
+                    <Button
+                      onClick={()=>{
+                        clearPlantData()
+                      }}
+                    >Clear Plants Config</Button>
                   </Menu>
                 </Box>
               )}

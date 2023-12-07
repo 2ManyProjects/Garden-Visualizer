@@ -182,6 +182,8 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
         aria-describedby="rename-modal-description"
       >
         <Box sx={{
+          justifyContent: 'center',
+          alignItems: 'center',
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -191,11 +193,11 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
             boxShadow: 24,
             p: 4,
         }}>
-          <Typography id="rename-modal" variant="h6" component="h2">
+          <Typography  sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} id="rename-modal" variant="h6" component="h2">
           Info: {selectedPlant?.Name}, {selectedPlant?.Latin}
           </Typography>
 
-          {Object.keys(selectedPlant).map((item, index) => {
+          {selectedPlant && Object.keys(selectedPlant).map((item, index) => {
             const regex = /(\d+(\.\d+)?)-(\d+(\.\d+)?)/;
             if( ["sheetIndex", "Image", "path", "Name", "Latin"].includes(item) || /^usr/.test(item))
               return null
@@ -209,10 +211,21 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
                   }} />
                 )
               }
-
             return (
-              <Typography key={index} fontWeight="bold">
-                {`${item}:  ${selectedPlant[item]}`}
+              <Typography sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} key={index} fontWeight="bold">
+                {typeof selectedPlant[item] !== "object" && `${item}:  ${selectedPlant[item] }`}
+                {selectedPlant[item] && typeof selectedPlant[item] === "object" && <Box>
+                    <Typography  sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} variant="h8" component="h3">
+                    {item}
+                    </Typography>
+                  {Object.keys(selectedPlant[item]).map((key, keyIndex) => {
+                  return(
+                    <Typography key={keyIndex} fontWeight="bold">
+                      {`${key}:  ${selectedPlant[item][key]}`}
+                    </Typography>
+                  )
+                })}
+                  </Box>}
               </Typography>
             )
           })}
@@ -295,9 +308,11 @@ const NumberRangeInput = ({ rangeString, keyName, setPlantData, currentVal }) =>
   };
 
   return (
-    <Box>
-        <Typography fontWeight="bold">{keyName}: {currentVal}</Typography>
-        <TextField
+    <Box >
+        <Typography fontWeight="bold" sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} >{keyName}: {currentVal}</Typography>
+        <Box sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} >
+
+          <TextField
           error={error}
           helperText={error ? `Enter a number between ${range.lower} and ${range.upper}` : ''}
           value={value}
@@ -306,7 +321,10 @@ const NumberRangeInput = ({ rangeString, keyName, setPlantData, currentVal }) =>
           type="number"
           label={`min:${range.lower} max:${range.upper}`}
         />
-        <Button onClick={() => setPlantData(null, `usr${keyName}`)}>Reset</Button>
+        </Box>
+        <Box sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} >
+          <Button onClick={() => setPlantData(null, `usr${keyName}`)}>Reset</Button>
+        </Box>
 
     </Box>
   );

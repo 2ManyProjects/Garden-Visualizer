@@ -46,7 +46,34 @@ const SyncButton = () => {
         }else {
             let row = response.data?.values[x];
             for(let y = 0; y < template.length; y++){
+              if(template[y] === "Yield Structure"){//Yield Structure
+                if(row[y] === "n/a"){
+                  plantData[template[y]] = null;
+                }else{
+                  let vals = row[y].split("#")
+                  if(vals.length !== 8){
+                    plantData[template[y]] = null;
+                  }else {
+                    let plantObj = {
+                      harvestUnit: vals[1],
+                      peakYield: vals[2],
+                      timeUnit: vals[3],
+                      yieldStart: vals[4],
+                      peakYieldStart: vals[5],
+                      peakYieldEnd: vals[6],
+                    };
+                    if(vals[0] === "p"){
+                      plantObj.eof = vals[7];
+                    }else{
+                      plantObj.yieldEnd = vals[7];
+                    }
+                    plantData[template[y]] = plantObj;
+                    
+                  }
+                }
+              }else{
                 plantData[template[y]] = row[y] || null;
+              }
             }
             plantList.push(plantData)
         }
