@@ -6,11 +6,12 @@ import SaveIcon from '@mui/icons-material/Save';
 import Launch from '@mui/icons-material/Launch';
 import Delete from '@mui/icons-material/Delete';
 import GetAppIcon from '@mui/icons-material/Download';
+import Shade from '@mui/icons-material/WbShade';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { EnvironmentalDataModal } from './EnvironmentalDataModal';
 
 
-const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData}) => {
+const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows}) => {
   const [isVisible, setIsVisible] = useState(false);  
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -112,6 +113,14 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
       {isVisible && (
         <>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+
+          <Button
+              color="primary"
+              startIcon={<Shade />}
+              onClick={()=>{
+                setShowShadows(!showShadows)
+              }}
+          />
           {measurementList.length > 0 && <Select
             sx={{maxWidth: 100}}
             value={selectedMeasurement || ''}

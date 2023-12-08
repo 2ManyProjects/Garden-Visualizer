@@ -9,6 +9,7 @@ const initialState = {
   plants: null,
   isVisible: true,
   plantMacros: null,
+  astroData: null,
   plantsInGarden: [],
   gardenAnalysis: null
 };
@@ -51,6 +52,9 @@ export const gardenSlice = createSlice({
       }
 
     },
+    setAstroData: (state, action) => {
+        state.astroData = action.payload;
+    },
     toggleVisibility: (state) => {
         state.isVisible = !state.isVisible;
     },
@@ -83,6 +87,6 @@ export const gardenSlice = createSlice({
 });
  
   
-  export const { setPermRole, setPlantMacroData, setGardenAnalysis, setPlantsInGarden,  toggleVisibility, setAllPlantData, setRoles, setSelectedPlant, setCurrentSession} = gardenSlice.actions;
+  export const { setPermRole, setPlantMacroData, setGardenAnalysis, setPlantsInGarden,  toggleVisibility, setAllPlantData, setRoles, setSelectedPlant, setCurrentSession, setAstroData} = gardenSlice.actions;
   
   export default gardenSlice.reducer;

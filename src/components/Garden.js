@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
 import { setAllPlantData, setCurrentSession, setPlantsInGarden } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
+import SunCalc from 'suncalc'
 
     
 const conversionFactors = {
@@ -38,7 +39,10 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
   const [scale, setScale] = useState(1);
-  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, selectedPermRole, plants, plantMacros, currentSession } = useSelector(state => state.garden); 
+
+  const [showShadows, setShowShadows] = useState(true);
+
+  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, selectedPermRole, plants, plantMacros, currentSession, astroData } = useSelector(state => state.garden); 
   const svgRef = useRef();
   useEffect(() => {
     setPoints([]);
@@ -809,13 +813,89 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     return plantsInGarden.map((plant, index) => {
     let pathArr = plant.path.split("/")
     let path = `https://drive.google.com/uc?id=${pathArr[pathArr.length - 2]}`;
+    let height = plant.height || null;
+    if(height){
+      height = parseFloat(height);
+    }
+    // console.log("Height", height)
+    const plantHeight = height;
+    let summerSolsticeShadowPolygon = null;
+    let winterSolsticeShadowPolygon = null;
+    // Calculate shadow polygons for the summer solstice
+    if(currentSession.data.coords && ["Canopy", "Understory", "Shrub"].includes(plant["Perm Role"]) && showShadows){
+      summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
+      winterSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-12-21'), plantHeight, currentSession.data.coords);
+      // console.log("winterSolsticeShadowPolygon", winterSolsticeShadowPolygon);
+      // console.log("summerSolsticeShadowPolygon", summerSolsticeShadowPolygon);
       
-      
+    }
+    
     return (
-      <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} index={index}/>
+      <React.Fragment key={index}>
+        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} index={index}/>
+        {summerSolsticeShadowPolygon && (
+          <polygon
+            points={summerSolsticeShadowPolygon}
+            style={{ fill: 'rgba(80, 0, 0, 0.7)', stroke: 'blue', strokeWidth: 1 }}
+          />
+        )}
+
+        {/* {astroData && <polygon points={summerSolsticeShadowPolygon} style={{ fill: 'rgba(50, 0, 0, 0.4)',  stroke: 'blue', strokeWidth: 1 }} />} */}
+        {winterSolsticeShadowPolygon && <polygon points={winterSolsticeShadowPolygon} style={{ fill: 'rgba(0, 0, 80, 0.7)',  stroke: 'blue', strokeWidth: 1 }} />}
+       
+      </React.Fragment>
     )
   })
   };
+
+
+  function getShadowMapForDay(plantX, plantY, date, plantHeight, location, log = false) {
+    let shadowPoints = [];
+    const times = SunCalc.getTimes(date, location.lat, location.lon);
+  
+    // Calculate shadows from sunrise to sunset
+    let currentTime = new Date(times.sunrise);
+    const endTime = new Date(times.sunset);
+    if(log)
+      console.log(currentTime, endTime, plantHeight,  location)
+  
+    while (currentTime <= endTime) {
+      const sunPosition = SunCalc.getPosition(currentTime, location.lat, location.lon);
+      if(log)
+        console.log(sunPosition);
+      // const shadowLength = (plantHeight / sunPosition.altitude) * 1;
+  
+      const shadowLength = Math.min(calculateShadowLength(plantHeight, sunPosition.altitude), 7000);
+      const adjustedAzimuth = sunPosition.azimuth + Math.PI / 2;
+      // north is up
+      const shadowX = plantX + ((shadowLength ) * Math.cos(adjustedAzimuth) )/ pixelsPerMeter;
+      const shadowY = plantY - ((shadowLength ) * Math.sin(adjustedAzimuth)) / pixelsPerMeter; // Negative because we assume y increases downwards on the screen
+  
+      shadowPoints.push({ x: shadowX, y: shadowY });
+  
+      // Increment current time (e.g., by an hour)
+      currentTime.setHours(currentTime.getHours() + 1);
+    }
+    if (shadowPoints.length > 0) {
+      shadowPoints.push(shadowPoints[0]);
+    }
+  
+    const polygonPointsString = shadowPoints.map(p => `${p.x},${p.y}`).join(' ');
+  
+    return polygonPointsString;
+  }
+  
+  function calculateShadowLength(plantHeight, sunElevationDeg, ) {
+    if (sunElevationDeg <= 0) {
+      // The sun is at or below the horizon, no shadow is cast
+      return 0;
+    }
+    const elevationRadians = sunElevationDeg * Math.PI / 180;
+    return plantHeight / Math.tan(elevationRadians);
+  }
+
+
+
   function calculateDistance(point1, point2) {
     const pxm = pixelsPerMeter;
      
@@ -1030,7 +1110,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
             </React.Fragment >
           )
         })}
-        {renderPlants()}
+        {useMemo(() => renderPlants(), [plantsInGarden, showShadows])}
+        {/* {renderPlants()} */}
         </g>
       </svg>
       <div style={{
@@ -1045,10 +1126,11 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
         let sesh = JSON.parse(JSON.stringify(currentSession))
         sesh.data.coords = {lat: coords.lat, lon: coords.lon};
         dispatch(setCurrentSession({data: sesh, storeSession: storeSession}))
-
         // curSesh.data.coords = {lat: coords.lat, lon: coords.lon};
         // storeSession();
       }}
+      showShadows={showShadows}
+      setShowShadows={setShowShadows}
       session={currentSession}
       measurementList={measurementList} 
       selectedMeasurement={selectedMeasurement} 

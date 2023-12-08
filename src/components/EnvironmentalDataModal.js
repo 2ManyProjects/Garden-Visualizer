@@ -5,6 +5,8 @@ import L from 'leaflet';
 import { Typography, Box, Modal, Button } from '@mui/material';
 import LocationOn from '@mui/icons-material/LocationOn';
 import { renderToStaticMarkup } from 'react-dom/server';
+import {setAstroData} from '../redux/gardenSlice';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import LZString from 'lz-string';
 
@@ -80,13 +82,58 @@ function getDateStr(dateModified){
   return dateStr
 }
 
-async function fetchHistoricalWeatherData(apiKey, latitude, longitude, startDate, endDate, id) {
+function parseHistoricalData(data){
+  let compiledData = {
+    monthlyMoonPhase: [],
+    solarPaths: {
+      summerSolstice: {
+        key: '06-21',
+        data: null
+      },
+      winterSolstice: {
+        key: '12-21',
+        data: null
+      },
+      vernalEquinox: {
+        key: '03-20',
+        data: null
+      },
+      autumnalEquinox: {
+        key: '09-22',
+        data: null
+      }
+    }
+  }
+  let monthKeys = Object.keys(data.historicalData).filter((item, index) => index < 12)
+
+  monthKeys.map((key, index) => {
+    compiledData.monthlyMoonPhase.push(data.historicalData[key].astro.phases);
+    data.historicalData[key].astro.data.map((item) => {
+      let solsticeKeys = Object.keys(compiledData.solarPaths)
+      for(let x = 0; x < solsticeKeys.length; x++){
+        if(item.dateLocal.includes(compiledData.solarPaths[solsticeKeys[x]].key)){
+          compiledData.solarPaths[solsticeKeys[x]].data = item;
+          return item;
+        }
+      }
+
+    })
+  });
+
+  return compiledData;
+
+}
+
+export async function fetchHistoricalWeatherData(apiKey, latitude, longitude, startDate, endDate, id, dispatch) {
 
   const cacheCheck = localStorage.getItem(`GardenPlanStorage-${id}-${startDate}-${endDate}`);
   if(cacheCheck){
     let returnData = JSON.parse(LZString.decompress(cacheCheck));
     console.log("HISTORICAL DATA", returnData)
-    return returnData;
+    // console.log("Parsed HISTORICAL DATA", parseHistoricalData(returnData))
+    // let astroData = parseHistoricalData(returnData);
+    dispatch(setAstroData(returnData.astroData))
+    return {almanacData: returnData.almanacData, historicalData: returnData.historicalData, astroData: returnData.astroData };
   }
 
   const weatherStationRequest = await axios.get(`https://api.weather.com/v3/location/near?geocode=${latitude},${longitude}&product=airport&format=json&apiKey=${apiKey}`);
@@ -155,16 +202,19 @@ async function fetchHistoricalWeatherData(apiKey, latitude, longitude, startDate
       }
     }
   }
-
-  console.log("HISTORICAL DATA", {historicalData, almanacData})
-  let jsonStr = JSON.stringify({historicalData, almanacData});
+  
+  let astroData = parseHistoricalData({historicalData, almanacData});
+  let jsonStr = JSON.stringify({historicalData, almanacData, astroData});
   const compressed = LZString.compress(jsonStr);
   localStorage.setItem(`GardenPlanStorage-${id}-${startDate}-${endDate}`, compressed);
-  return {historicalData, almanacData};
+  console.log("HISTORICAL DATA", {almanacData: almanacData, historicalData: historicalData, astroData })
+  dispatch(setAstroData(astroData))
+  return {almanacData: almanacData, historicalData: historicalData, astroData };
 }
 
 
 export function EnvironmentalDataModal({session, setLocation}) {
+    const dispatch = useDispatch();
     const [MapModalOpen, setMapModalOpen] = useState(false);
     const [location, recordLocation] = useState(null);
     const [open, setOpen] = useState(false);
@@ -221,7 +271,7 @@ export function EnvironmentalDataModal({session, setLocation}) {
               Select Location
             </Button>
             {(location || session?.data?.coords) && <Button variant="contained" color="primary" onClick={async() => {
-              let data = await fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id)
+              let data = await fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id, dispatch)
               setLocationData(data);
               }}>
               Get Location Data
