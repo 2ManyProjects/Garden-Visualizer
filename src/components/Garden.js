@@ -840,8 +840,12 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           />
         )}
 
-        {/* {astroData && <polygon points={summerSolsticeShadowPolygon} style={{ fill: 'rgba(50, 0, 0, 0.4)',  stroke: 'blue', strokeWidth: 1 }} />} */}
-        {winterSolsticeShadowPolygon && <polygon points={winterSolsticeShadowPolygon} style={{ fill: 'rgba(0, 0, 80, 0.7)',  stroke: 'blue', strokeWidth: 1 }} />}
+        {winterSolsticeShadowPolygon && 
+          <polygon 
+            points={winterSolsticeShadowPolygon} 
+            style={{ fill: 'rgba(0, 0, 80, 0.7)',  stroke: 'blue', strokeWidth: 1 }} 
+          />
+        }
        
       </React.Fragment>
     )
@@ -863,17 +867,15 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       const sunPosition = SunCalc.getPosition(currentTime, location.lat, location.lon);
       if(log)
         console.log(sunPosition);
-      // const shadowLength = (plantHeight / sunPosition.altitude) * 1;
   
       const shadowLength = Math.min(calculateShadowLength(plantHeight, sunPosition.altitude), 7000);
-      const adjustedAzimuth = sunPosition.azimuth + Math.PI / 2;
-      // north is up
-      const shadowX = plantX + ((shadowLength ) * Math.cos(adjustedAzimuth) )/ pixelsPerMeter;
-      const shadowY = plantY - ((shadowLength ) * Math.sin(adjustedAzimuth)) / pixelsPerMeter; // Negative because we assume y increases downwards on the screen
+      const adjustedAzimuth = sunPosition.azimuth + Math.PI / 2; //rotate shadow 90 ccw, 
+      
+      const shadowX = plantX + ((shadowLength ) * Math.cos(adjustedAzimuth) )/ (pixelsPerMeter / 2);
+      const shadowY = plantY - ((shadowLength ) * Math.sin(adjustedAzimuth)) / (pixelsPerMeter / 2); 
   
       shadowPoints.push({ x: shadowX, y: shadowY });
   
-      // Increment current time (e.g., by an hour)
       currentTime.setHours(currentTime.getHours() + 1);
     }
     if (shadowPoints.length > 0) {
