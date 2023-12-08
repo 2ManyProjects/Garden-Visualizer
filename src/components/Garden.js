@@ -821,9 +821,13 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     const plantHeight = height;
     let summerSolsticeShadowPolygon = null;
     let winterSolsticeShadowPolygon = null;
+    let equinoxShadowPolygon = null;
+    let winterEquinoxShadowPolygon = null;
     // Calculate shadow polygons for the summer solstice
     if(currentSession.data.coords && ["Canopy", "Understory", "Shrub"].includes(plant["Perm Role"]) && showShadows){
       summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
+      equinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-09-22'), plantHeight, currentSession.data.coords);
+      // winterEquinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-03-20'), plantHeight, currentSession.data.coords);
       winterSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-12-21'), plantHeight, currentSession.data.coords);
       // console.log("winterSolsticeShadowPolygon", winterSolsticeShadowPolygon);
       // console.log("summerSolsticeShadowPolygon", summerSolsticeShadowPolygon);
@@ -836,14 +840,21 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
         {summerSolsticeShadowPolygon && (
           <polygon
             points={summerSolsticeShadowPolygon}
-            style={{ fill: 'rgba(80, 0, 0, 0.7)', stroke: 'blue', strokeWidth: 1 }}
+            style={{ fill: 'rgba(80, 0, 0, 0.25)', stroke: 'red', strokeWidth: 3 }}
           />
         )}
+        {equinoxShadowPolygon && (
+          <polygon
+            points={equinoxShadowPolygon}
+            style={{ fill: 'rgba(255, 255, 0, 0.1)', stroke: 'yellow', strokeWidth: 3 }}
+          />
+        )}
+
 
         {winterSolsticeShadowPolygon && 
           <polygon 
             points={winterSolsticeShadowPolygon} 
-            style={{ fill: 'rgba(0, 0, 80, 0.7)',  stroke: 'blue', strokeWidth: 1 }} 
+            style={{ fill: 'rgba(0, 0, 80, 0.25)',  stroke: 'blue', strokeWidth: 3 }} 
           />
         }
        
@@ -868,7 +879,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
       if(log)
         console.log(sunPosition);
   
-      const shadowLength = Math.min(calculateShadowLength(plantHeight, sunPosition.altitude), 7000);
+      const shadowLength = Math.min(calculateShadowLength(plantHeight, sunPosition.altitude), 15000);
       const adjustedAzimuth = sunPosition.azimuth + Math.PI / 2; //rotate shadow 90 ccw, 
       
       const shadowX = plantX + ((shadowLength ) * Math.cos(adjustedAzimuth) )/ (pixelsPerMeter / 2);
