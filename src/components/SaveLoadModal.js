@@ -98,6 +98,9 @@ const DualPurposeModal = ({ modalData, session, retrieveData }) => {
                   for(let x = 0; x < obj.length; x++){
                     if(!jsonValue.find(item => item.id === obj[x].id)){
                       jsonValue.push(obj[x])
+                    }else {
+                      let index = jsonValue.findIndex(item => item.id === obj[x].id);
+                      jsonValue[index] = {...jsonValue[index], ...obj[x]};
                     }
                   }
                   localStorage.setItem("GardenPlanStorage", JSON.stringify(jsonValue));
