@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis, setPlantMacroData } from '../redux/gardenSlice'; // Import setPlantData
 import SyncButton from './SyncButton';
 import PlantIcons from './PlantIcons';
-import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography,  } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography, ToggleButton  } from '@mui/material';
 import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
 
@@ -34,6 +34,9 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
       // console.log("plantMacros", plantMacros);
       for(let  x = 0; x < plantsInGarden.length; x++){
         let plant = plantsInGarden[x];
+        if(plant.nutrientCalc !== null && plant.nutrientCalc === false){
+          continue;
+        }
         let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
         let macro = plantMacros?.plantMacroRequirements[plant.cropType];
         // console.log(macro, plant)
@@ -229,6 +232,37 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
               </Typography>
             )
           })}
+          {selectedPlant && (
+            <ToggleButton selected={!Object.keys(selectedPlant).includes("nutrientCalc")? true : selectedPlant.nutrientCalc}
+            onChange={(e)=>{
+              let val = !selectedPlant.nutrientCalc;
+              if(!Object.keys(selectedPlant).includes("nutrientCalc")){
+                val = false;
+              }
+              let plant = {...selectedPlant};
+              plant.nutrientCalc = val;
+              dispatch(setSelectedPlant({...plant, local: true}))
+            }}>
+              Include in Nutrient Calc
+            </ToggleButton>
+
+          )}
+
+          {selectedPlant && (
+            <ToggleButton selected={!Object.keys(selectedPlant).includes("shadow")? true : selectedPlant.shadow}
+            onChange={(e)=>{
+              let val = !selectedPlant.shadow;
+              if(!Object.keys(selectedPlant).includes("shadow")){
+                val = false;
+              }
+              let plant = {...selectedPlant};
+              plant.shadow = val;
+              dispatch(setSelectedPlant({...plant, local: true}))
+            }}>
+              Calc Shadows
+            </ToggleButton>
+
+          )}
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
             <Button onClick={handleClose}>Close</Button>

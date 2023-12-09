@@ -498,6 +498,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           x: cursorpt.x,
           y: cursorpt.y,
           cropType: selectedPlant["Crop Type"],
+          nutrientCalc: selectedPlant["nutrientCalc"],
+          shadow: selectedPlant["shadow"],
           lifespan: selectedPlant["usrLifespan"]  ||  parseAndGenerateNumber(selectedPlant["Lifespan"]),
           rootDepth: selectedPlant["usrRoot Depth (m)"]  ||  parseAndGenerateNumber(selectedPlant["Root Depth (m)"]),
           crownDia: selectedPlant["usrCrown Spread (m)"] ? parseFloat(selectedPlant["usrCrown Spread (m)"]): parseAndGenerateNumber(selectedPlant["Crown Spread (m)"], 1),
@@ -808,7 +810,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     }
 
   const renderPlants = () => {
-    //https://drive.google.com/file/d/1FQwtHBBFHOaGoQrrWSG9k9ddTHFVND-5/view?usp=sharing 
+    //https://drive.google.com/file/d/1p2FZ5DgSTNNGcaiJAA4qiCTkVvF1nB13/view?usp=drive_link
+    
     //https://drive.google.com/uc?id=1FQwtHBBFHOaGoQrrWSG9k9ddTHFVND-5
     return plantsInGarden.map((plant, index) => {
     let pathArr = plant.path.split("/")
@@ -824,7 +827,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     let equinoxShadowPolygon = null;
     let winterEquinoxShadowPolygon = null;
     // Calculate shadow polygons for the summer solstice
-    if(currentSession.data.coords && ["Canopy", "Understory", "Shrub"].includes(plant["Perm Role"]) && showShadows){
+    // "Canopy", "Understory", "Shrub"
+    if(selectedPermRole && currentSession.data.coords && [selectedPermRole].includes(plant["Perm Role"]) && showShadows && plant.shadow !== false){
       summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
       equinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-09-22'), plantHeight, currentSession.data.coords);
       // winterEquinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-03-20'), plantHeight, currentSession.data.coords);
@@ -1123,7 +1127,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
             </React.Fragment >
           )
         })}
-        {useMemo(() => renderPlants(), [plantsInGarden, showShadows])}
+        {useMemo(() => renderPlants(), [plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
         {/* {renderPlants()} */}
         </g>
       </svg>
