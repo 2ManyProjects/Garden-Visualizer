@@ -33,6 +33,7 @@ const DualPurposeModal = ({ modalData, session, retrieveData }) => {
   };
 
   const handleNameChange = (event) => {
+    event.stopPropagation();
     setNewName(event.target.value);
     setIsConfirmDisabled(event.target.value.length < 3);
   };

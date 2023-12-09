@@ -187,7 +187,10 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
             fullWidth
             variant="standard"
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+            onChange={(e) => {
+              e.stopPropagation();
+              setNewName(e.target.value);
+            }}
           />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
             <Button onClick={handleClose}>Cancel</Button>

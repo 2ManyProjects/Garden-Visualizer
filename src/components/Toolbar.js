@@ -329,6 +329,7 @@ const NumberRangeInput = ({ rangeString, keyName, setPlantData, currentVal }) =>
 
   const handleChange = (event) => {
     const newValue = event.target.value;
+    event.stopPropagation();
     setValue(newValue);
 
     if (range) {
