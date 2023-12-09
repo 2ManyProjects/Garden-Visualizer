@@ -810,9 +810,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     }
 
   const renderPlants = () => {
-    //https://drive.google.com/file/d/1p2FZ5DgSTNNGcaiJAA4qiCTkVvF1nB13/view?usp=drive_link
     
-    //https://drive.google.com/uc?id=1FQwtHBBFHOaGoQrrWSG9k9ddTHFVND-5
     return plantsInGarden.map((plant, index) => {
     let pathArr = plant.path.split("/")
     let path = `https://drive.google.com/uc?id=${pathArr[pathArr.length - 2]}`;
@@ -826,8 +824,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
     let winterSolsticeShadowPolygon = null;
     let equinoxShadowPolygon = null;
     let winterEquinoxShadowPolygon = null;
-    // Calculate shadow polygons for the summer solstice
-    // "Canopy", "Understory", "Shrub"
+    
     if(selectedPermRole && currentSession.data.coords && [selectedPermRole].includes(plant["Perm Role"]) && showShadows && plant.shadow !== false){
       summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
       equinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-09-22'), plantHeight, currentSession.data.coords);
@@ -973,9 +970,9 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const areaInPixels = calculatePolygonArea(points);
 
   const baseFontSize = 8; // Base font size in pixels
-  const baseEdgeVertSize = 8;
+  const baseEdgeVertSize = 5;
   const baseStrokeSize = 2;
-  let adjustedFontSize = Math.max(baseFontSize / (scale), (1/scale) * 35);
+  let adjustedFontSize = Math.max(baseFontSize / (scale), (1/scale) * 10);
   let adjustedEdgeVertSize = Math.min(baseEdgeVertSize / (scale*scale), 20);
   let adjustedStrokeSize = baseStrokeSize / (scale);
 

@@ -245,7 +245,6 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
             }}>
               Include in Nutrient Calc
             </ToggleButton>
-
           )}
 
           {selectedPlant && (
