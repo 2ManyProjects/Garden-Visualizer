@@ -730,7 +730,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
         }));
       }
     },
-    [selectedPointIndex, selectedPlantIndex, points, scale, plantsInGarden, viewBox, isPanning, startPan]
+    [selectedPointIndex, selectedPlantIndex, points, scale, selectedMeasurement, plantsInGarden, viewBox, isPanning, startPan]
   );
 
   const handleMouseUp = () => {
@@ -1039,6 +1039,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
             cx={point.x}
             cy={point.y}
             r={adjustedEdgeVertSize}
+            zIndex={100}
             fill={index === lastSelectedPointIndex ? "rgba(127, 0, 0, 0.5)" : "rgba(0, 0, 127, 0.5)"}
             stroke="black"
             strokeWidth={adjustedStrokeSize}
@@ -1086,6 +1087,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
                   key={index}
                   cx={point.x}
                   cy={point.y}
+                  zIndex={100}
                   r={adjustedEdgeVertSize}
                   fill={index === item.lastSelectedPointIndex ? "rgba(127, 0, 0, 0.5)" : "rgba(0, 0, 127, 0.5)"}
                   stroke="blue"
