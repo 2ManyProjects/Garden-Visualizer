@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // For generating GUIDs
 import { useDispatch, useSelector } from 'react-redux';
-import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis, setPlantMacroData } from '../redux/gardenSlice'; // Import setPlantData
+import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis, setPlantMacroData, setRoles, setAllPlantData } from '../redux/gardenSlice'; // Import setPlantData
 import SyncButton from './SyncButton';
 import PlantIcons from './PlantIcons';
 import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography, ToggleButton  } from '@mui/material';
@@ -10,6 +10,8 @@ import Toolbar from '@mui/material/Toolbar';
 
 const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const fetching = useRef(false);
   const dispatch = useDispatch();
   const { permRoles, selectedPlants, selectedPlant, plantsInGarden, plantMacros, gardenAnalysis } = useSelector(state => state.garden);
   const [selectedPermRole, setSelectedPermRole] = useState('');
@@ -52,7 +54,8 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
       }
     }else {
       // console.log("NoplantMacros");
-      // fetchSheetData();
+      if(!fetching.current)
+        fetchSheetData();
     }
     if(!gardenAnalysis || gardenAnalysis.kReq !== analysisData.kReq || gardenAnalysis.nReq !== analysisData.nReq){
       dispatch(setGardenAnalysis({...(gardenAnalysis || {}), ...analysisData}))
@@ -69,6 +72,8 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
 
 
   const fetchSheetData = async () => {
+    fetching.current = true;
+    setIsFetching(true);
     var config = {
       method: 'get',
       url: 'https://ytwwg98ey8.execute-api.ca-central-1.amazonaws.com/prod/v1/plants/general',
@@ -82,7 +87,11 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
     if(plantData.status === 200){
       let plantResponse = JSON.parse(plantData.data.body);
       dispatch(setPlantMacroData(plantResponse.data.plantMacros));
+      dispatch(setRoles(plantResponse.data.permRoles));
+      dispatch(setAllPlantData(plantResponse.data.plants));
     }
+    fetching.current = false;
+    setIsFetching(false);
     
   }; 
 
@@ -121,7 +130,7 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
     </FormControl>
 
 
-    <SyncButton /> 
+    <SyncButton  disabled={isFetching} fetchSheetData={fetchSheetData}/> 
 
     {permRoles.length > 0 && <FormControl style={{ maxWidth: 400, minWidth: 200,  margin: '10px' }}>
       <InputLabel id="plant-icon-select-label">Role</InputLabel>
