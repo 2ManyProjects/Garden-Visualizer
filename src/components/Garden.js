@@ -812,8 +812,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
   const renderPlants = () => {
     
     return plantsInGarden.map((plant, index) => {
-    let pathArr = plant.path.split("/")
-    let path = `https://drive.google.com/uc?id=${pathArr[pathArr.length - 2]}`;
+    // let pathArr = plant.path.split("/")
+    let path = plant.path;
     let height = plant.height || null;
     if(height){
       height = parseFloat(height);

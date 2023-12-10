@@ -17,7 +17,7 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
   const [keys, showKeys] = useState(false);
   const [length, setLength] = useState('');
   const [width, setWidth] = useState('');
-  const [unit, setUnit] = useState('');
+  const [unit, setUnit] = useState('m');
   const [isPlantSelectorEnabled, setIsPlantSelectorEnabled] = useState(true);
 
   const handleOpenKeys = () => showKeys(true);
@@ -52,7 +52,7 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
       }
     }else {
       // console.log("NoplantMacros");
-      fetchSheetData();
+      // fetchSheetData();
     }
     if(!gardenAnalysis || gardenAnalysis.kReq !== analysisData.kReq || gardenAnalysis.nReq !== analysisData.nReq){
       dispatch(setGardenAnalysis({...(gardenAnalysis || {}), ...analysisData}))
@@ -69,48 +69,21 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
 
 
   const fetchSheetData = async () => {
-    const apiKey = 'AIzaSyBJ06eJiBt8FGOg6KH1SQWgLXEikskMqIY'; 
-    const spreadsheetId = '1evjgI_DQb4dlvvIE-fIfPmGCmJtRH796tsgyBQ-I51E'; 
-    let range = 'Plant Macros'; 
-  
-    let url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
-  
-    try {
-      let template = null;
-      
-      let macroData = await axios.get(url);
-      let plantMacroRequirements = {};
-      let plantMacroSources = {};
-      template = null;
-      let dataSourceIndex = 0;
-      for(let x = 0; x < macroData.data?.values.length; x++){
-        if(["cropType", "Source"].includes(macroData.data?.values[x][0])){
-          template = macroData.data?.values[x];
-          dataSourceIndex += 1;
-          continue;
-        }
-        let plantMacroRequirement = {};
-        let plantMacroSource = {};
-        let cell = macroData.data?.values[x];
-        for(let y = 0; y < template.length; y++){
-          if(dataSourceIndex === 1){
-            plantMacroRequirement[template[y]] = cell[y] || null;
-          }else if(dataSourceIndex === 2){
-            plantMacroSource[template[y]] = cell[y] || null;
-          }
-        }        
-        if(dataSourceIndex === 1){
-          plantMacroRequirements[plantMacroRequirement.cropType] = plantMacroRequirement || null;
-        }else if(dataSourceIndex === 2){
-          plantMacroSources[plantMacroSource.Source] = plantMacroSource || null;
-        }
-      }
-      dispatch(setPlantMacroData({plantMacroRequirements, plantMacroSources}));
-
-
-    } catch (error) {
-      console.error('Error fetching sheet data:', error);
+    var config = {
+      method: 'get',
+      url: 'https://ytwwg98ey8.execute-api.ca-central-1.amazonaws.com/prod/v1/plants/general',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    };
+    
+    let plantData = await axios(config) 
+    // console.log("PLANTDATA", plantData.data.body, plantData.status);
+    if(plantData.status === 200){
+      let plantResponse = JSON.parse(plantData.data.body);
+      dispatch(setPlantMacroData(plantResponse.data.plantMacros));
     }
+    
   }; 
 
   

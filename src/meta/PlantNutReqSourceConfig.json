@@ -1,0 +1,98 @@
+{
+  "Plant Macros": {
+  "plantMacroRequirements": {
+    "Undemanding": {
+      "cropType": "Undemanding",
+      "Unit": "g/m2",
+      "nReq": "0",
+      "kReq": "0"
+    },
+    "Moderate": {
+      "cropType": "Moderate",
+      "Unit": "g/m2",
+      "nReq": "2",
+      "kReq": "3"
+    },
+    "Heavy": {
+      "cropType": "Heavy",
+      "Unit": "g/m2",
+      "nReq": "8",
+      "kReq": "10"
+    },
+    "Annuals": {
+      "cropType": "Annuals",
+      "Unit": "g/m2",
+      "nReq": "28",
+      "kReq": "37"
+    },
+    "N Fixer (Full)": {
+      "cropType": "N Fixer (Full)",
+      "Unit": "g/m2",
+      "nReq": "-10",
+      "kReq": null
+    },
+    "N Fixer (Partial)": {
+      "cropType": "N Fixer (Partial)",
+      "Unit": "g/m2",
+      "nReq": "-5",
+      "kReq": null
+    }
+  },
+  "plantMacroSources": {
+    "N Fixer (Full)": {
+      "Source": "N Fixer (Full)",
+      "Unit": "g/m2",
+      "nContent": "10",
+      "kContent": null
+    },
+    "N Fixer (Partial)": {
+      "Source": "N Fixer (Partial)",
+      "Unit": "g/m2",
+      "nContent": "5",
+      "kContent": null
+    },
+    "Urine (Human)": {
+      "Source": "Urine (Human)",
+      "Unit": "g/pee",
+      "nContent": "5.6",
+      "kContent": "7"
+    },
+    "Manure": {
+      "Source": "Manure",
+      "Unit": "g/kg",
+      "nContent": "6",
+      "kContent": "4.2"
+    },
+    "Compost": {
+      "Source": "Compost",
+      "Unit": "g/kg",
+      "nContent": "5",
+      "kContent": "6.7"
+    },
+    "Comfrey Mulch": {
+      "Source": "Comfrey Mulch",
+      "Unit": "g/cut",
+      "nContent": "0.5",
+      "kContent": "10"
+    },
+    "Fresh Seaweed": {
+      "Source": "Fresh Seaweed",
+      "Unit": "g/kg",
+      "nContent": "2",
+      "kContent": null
+    },
+    "Seaweed meal": {
+      "Source": "Seaweed meal",
+      "Unit": "g/kg",
+      "nContent": null,
+      "kContent": "22"
+    },
+    "Wood ash": {
+      "Source": "Wood ash",
+      "Unit": "g/kg",
+      "nContent": null,
+      "kContent": "80"
+    }
+  }
+}
+}
