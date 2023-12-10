@@ -26,7 +26,7 @@ function LocationMarker({ onClick }) {
   const MapWithBounds = () => {
     const map = useMap();
 
-    map.setMaxBounds(CanadaBounds);
+    // map.setMaxBounds(CanadaBounds);
   
     React.useEffect(() => {
       map.flyToBounds(CanadaBounds);
@@ -59,7 +59,7 @@ function MapModal({ open, onClose, onLocationSelect, coords, location }) {
                 <MapContainer center={[coords?.lat || location?.lat || 0, coords?.lon || location?.lon ||  0]} style={{ width: '100%', height: '100%' }}
                   zoom={4} 
                   scrollWheelZoom={true}
-                  maxBounds={CanadaBounds}
+                  // maxBounds={CanadaBounds}
                   maxBoundsViscosity={1.0}
                   minZoom={4} 
                 >
