@@ -83,12 +83,28 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
     };
     
     let plantData = await axios(config) 
-    // console.log("PLANTDATA", plantData.data.body, plantData.status);
+    console.log("PLANTDATA", plantData);
     if(plantData.status === 200){
-      let plantResponse = JSON.parse(plantData.data.body);
-      dispatch(setPlantMacroData(plantResponse.data.plantMacros));
-      dispatch(setRoles(plantResponse.data.permRoles));
-      dispatch(setAllPlantData(plantResponse.data.plants));
+      let plantResponse = plantData.data.data;
+      dispatch(setPlantMacroData(plantResponse.plantMacros));
+      dispatch(setRoles(plantResponse.permRoles));
+      dispatch(setAllPlantData(plantResponse.plants));
+    }else if(plantData.status === 202){
+      config = {
+        method: 'get',
+        url: plantData.data.data,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      try {
+        const response = await axios(config);
+        dispatch(setPlantMacroData(response.data.plantMacros));
+        dispatch(setRoles(response.data.permRoles));
+        dispatch(setAllPlantData(response.data.plants));
+      } catch (error) {
+        console.error('Error downloading the data:', error);
+      }
     }
     fetching.current = false;
     setIsFetching(false);

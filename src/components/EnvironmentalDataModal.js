@@ -73,65 +73,13 @@ function MapModal({ open, onClose, onLocationSelect, coords, location }) {
     );
 }
 
-function getDateStr(dateModified){
-  const date = new Date(dateModified)
-  const year = date.getFullYear()
-  const month = ('0' + (date.getMonth() + 1)).substr(-2)
-  const day = ('0' + date.getDate()).substr(-2)
-  const dateStr = [year, month, day].join('')
-  return dateStr
-}
-
-function parseHistoricalData(data){
-  let compiledData = {
-    monthlyMoonPhase: [],
-    solarPaths: {
-      summerSolstice: {
-        key: '06-21',
-        data: null
-      },
-      winterSolstice: {
-        key: '12-21',
-        data: null
-      },
-      vernalEquinox: {
-        key: '03-20',
-        data: null
-      },
-      autumnalEquinox: {
-        key: '09-22',
-        data: null
-      }
-    }
-  }
-  let monthKeys = Object.keys(data.historicalData).filter((item, index) => index < 12)
-
-  monthKeys.map((key, index) => {
-    compiledData.monthlyMoonPhase.push(data.historicalData[key].astro.phases);
-    data.historicalData[key].astro.data.map((item) => {
-      let solsticeKeys = Object.keys(compiledData.solarPaths)
-      for(let x = 0; x < solsticeKeys.length; x++){
-        if(item.dateLocal.includes(compiledData.solarPaths[solsticeKeys[x]].key)){
-          compiledData.solarPaths[solsticeKeys[x]].data = item;
-          return item;
-        }
-      }
-
-    })
-  });
-
-  return compiledData;
-
-}
-
 export async function fetchHistoricalWeatherData(apiKey, latitude, longitude, startDate, endDate, id, dispatch) {
 
-  const cacheCheck = localStorage.getItem(`GardenPlanStorage-${id}-${startDate}-${endDate}`);
+  const cacheCheck = localStorage.getItem(`GardenPlanStorage-${id}-${latitude}-${longitude}`);
   if(cacheCheck){
     let returnData = JSON.parse(LZString.decompress(cacheCheck));
-    console.log("HISTORICAL DATA", returnData)
-    // console.log("Parsed HISTORICAL DATA", parseHistoricalData(returnData))
-    // let astroData = parseHistoricalData(returnData);
+    // console.log("HISTORICAL DATA", returnData)
+    
     dispatch(setAstroData(returnData.astroData))
     return {almanacData: returnData.almanacData, historicalData: returnData.historicalData, astroData: returnData.astroData };
   }
@@ -139,77 +87,43 @@ export async function fetchHistoricalWeatherData(apiKey, latitude, longitude, st
   const weatherStationRequest = await axios.get(`https://api.weather.com/v3/location/near?geocode=${latitude},${longitude}&product=airport&format=json&apiKey=${apiKey}`);
   if(weatherStationRequest.status !== 200)
     return
+  
 
-  const historicalData = {};
-  const almanacData = [];
-  let stationId = null;
-  let stationName = null;
-  //`https://api.weather.com/v1/location/${weatherStationRequest.data.location.icaoCode[1]}:9:CA/almanac/daily.json?apiKey=${apiKey}&units=m&start=${String(month).padStart(2, '0')}01&end=${String(month).padStart(2, '0')}${new Date(year, month, 0).getDate()}`
-  // let alUrl = `https://api.weather.com/v3/wx/almanac/monthly/1month?icaoCode=${weatherStationRequest.data.location.icaoCode[1]}&format=json&units=m&month=${1}&apiKey=${apiKey}`;
-  // const alResp = await axios.get(alUrl);
-  // console.log(alResp)
-  for (let year = startDate; year <= endDate; year++) {
-    // let aggUrl = `https://api.weather.com/v2/astro?apiKey=${apiKey}&geocode=${latitude},${longitude}&days=${30}&date=${year}0101&format=json`
-    // const aggResponse = await axios.get(aggUrl);
-    // console.log("aggResponse", aggResponse);
-    // return
-    for (let month = 1; month <= 12; month++) {
-      const dateString = `${year}${String(month).padStart(2, '0')}`;
-      if(year === startDate){
-        let almanacUrl = `https://api.weather.com/v3/wx/almanac/monthly/1month?icaoCode=${weatherStationRequest.data.location.icaoCode[1]}&format=json&units=m&month=${month}&apiKey=${apiKey}`
-        const alResponse = await axios.get(almanacUrl);
-        if(alResponse.status === 200){
-          let alObj = {}
-          let keys = Object.keys(alResponse.data);
-
-          for(let x = 0; x < keys.length; x++){
-            alObj[keys[x]] = alResponse.data[keys[x]][0] || null;
-          }
-
-          almanacData.push(alObj);
-          if(!stationId){
-            stationId = alObj.stationId
-            stationName = alObj.stationName
-          }
-        }
-
+  var config = {
+    method: 'get',
+    url: 'https://ytwwg98ey8.execute-api.ca-central-1.amazonaws.com/prod/v1/climate/location',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    params: { latitude, longitude, startDate, endDate, id: `GardenPlanStorage-${id}-${latitude}-${longitude}` }
+  };
+  
+  let locationData = await axios(config) 
+  // console.log("locationData url", locationData); // .data.body, plantData.status)
+  if(locationData.status === 202 || locationData.status === 200){
+    config = {
+      method: 'get',
+      url: locationData.data.data,
+      headers: {
+        'Content-Type': 'application/json'
       }
-      let url = `https://api.weather.com/v1/location/${weatherStationRequest.data.location.icaoCode[1]}:9:CA/observations/historical.json?apiKey=${apiKey}&units=m&startDate=${dateString}01&endDate=${dateString}${new Date(year, month, 0).getDate()}`;
-      let astroUrl = `https://api.weather.com/v2/astro?apiKey=${apiKey}&geocode=${latitude},${longitude}&days=${new Date(year, month, 0).getDate() === 31  ? 30 : new Date(year, month, 0).getDate() }&date=${dateString}01&format=json`;
+    };
+    try {
+      const response = await axios(config);
+      // console.log("locationData", response); 
 
+      let jsonStr = JSON.stringify(response.data);
+      // console.log("HISTORICAL DATA", response.data)
+      const compressed = LZString.compress(jsonStr);
+      localStorage.setItem(`GardenPlanStorage-${id}-${latitude}-${longitude}`, compressed);
+      dispatch(setAstroData(response.data.astroData))
+      return {almanacData: response.data.almanacData, historicalData: response.data.historicalData, astroData: response.data.astroData};
 
-      try {
-        const response = await axios.get(url);
-        const astroResponse = await axios.get(astroUrl);
-        if(response.data.metadata.status_code === 200 || astroResponse.data.metadata.status_code === 200)
-          historicalData[dateString] = {
-            observations: [],
-            astro: {
-              data: [],
-              phases: []
-            }
-          }
-        if(astroResponse.data.metadata.status_code === 200){
-          historicalData[dateString].astro = {
-            data: astroResponse.data.astroData,
-            phases: astroResponse.data.astroPhases
-          };
-        }
-        if(response.data.metadata.status_code === 200)
-          historicalData[dateString].observations = response.data.observations;
-      } catch (error) {
-        console.error(`Failed to fetch historical weather data for ${dateString}:`, error);
-      }
+      // return data;
+    } catch (error) {
+      console.error('Error downloading the data:', error);
     }
   }
-  
-  let astroData = parseHistoricalData({historicalData, almanacData});
-  let jsonStr = JSON.stringify({historicalData, almanacData, astroData});
-  const compressed = LZString.compress(jsonStr);
-  localStorage.setItem(`GardenPlanStorage-${id}-${startDate}-${endDate}`, compressed);
-  console.log("HISTORICAL DATA", {almanacData: almanacData, historicalData: historicalData, astroData })
-  dispatch(setAstroData(astroData))
-  return {almanacData: almanacData, historicalData: historicalData, astroData };
 }
 
 
@@ -218,8 +132,8 @@ export function EnvironmentalDataModal({session, setLocation}) {
     const [MapModalOpen, setMapModalOpen] = useState(false);
     const [location, recordLocation] = useState(null);
     const [open, setOpen] = useState(false);
-    const apiKey = 'e1f10a1e78da46f5b10a1e78da96f525'; // Replace with your actual API key
-    const startDate = new Date().getFullYear() - 1; // Start of your date range
+    const apiKey = 'e1f10a1e78da46f5b10a1e78da96f525';
+    const startDate = new Date().getFullYear() - 1;  
     const endDate = new Date().getFullYear(); 
     const [locationData, setLocationData] = useState(null);
   
