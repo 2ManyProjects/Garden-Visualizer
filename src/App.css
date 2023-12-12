@@ -12,7 +12,9 @@
     animation: App-logo-spin infinite 20s linear;
   }
 }
-
+.tooltip-container {
+  z-index: 100000; /* Adjust as necessary to be higher than modal's z-index */
+}
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
