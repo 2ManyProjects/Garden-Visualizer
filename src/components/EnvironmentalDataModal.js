@@ -13,6 +13,7 @@ import { Zoom } from '@visx/zoom';
 import { localPoint } from '@visx/event';
 import { LegendThreshold } from '@visx/legend';
 import { scaleThreshold } from '@visx/scale';
+import mapboxgl from 'mapbox-gl';
 import {
   AnimatedAxis,
   AnimatedGrid,
@@ -28,6 +29,7 @@ import {
    LineSeries
 } from "@visx/xychart";
 
+mapboxgl.accessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 function LocationMarker({ onClick }) {
     useMapEvents({
       click(e) {
@@ -231,12 +233,46 @@ export function EnvironmentalDataModal({session, setLocation}) {
     const [MapModalOpen, setMapModalOpen] = useState(false);
     const [location, recordLocation] = useState(null);
     const [open, setOpen] = useState(false);
+    const [openHeightMap, setOpenHeightMap] = useState(false);
     const apiKey = 'e1f10a1e78da46f5b10a1e78da96f525';
     const startDate = new Date().getFullYear() - 1;  
     const endDate = new Date().getFullYear(); 
     const [locationData, setLocationData] = useState(null);
     const { width, height } = useViewportSize();
   
+    useEffect(() => {
+      if (openHeightMap) {
+        // console.log(location?.lat || session?.data?.coords?.lat, location?.lon || session?.data?.coords?.lon);
+        var map = new mapboxgl.Map({
+          container: 'map-container',
+          style: 'mapbox://styles/mapbox/outdoors-v11',
+          center: [location?.lon || session?.data?.coords?.lon, location?.lat || session?.data?.coords?.lat],
+          zoom: 13,
+          
+        });
+  
+        map.on('load', () => {
+          map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            'tileSize': 512,
+            'maxzoom': 15
+          });
+          map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+          
+        });
+      }else {
+        if(map)
+          map.remove();
+      }
+  
+      return () => {
+        if (map) {
+          map.remove();
+        }
+      };
+    }, [openHeightMap, location?.lat, location?.lon, session?.data?.coords?.lat, session?.data?.coords?.lon]);
+
     useEffect(()=> {
       const cacheCheck = localStorage.getItem(`GardenPlanStorage-${session.id}-${startDate}-${endDate}`);
       if(cacheCheck){
@@ -247,12 +283,13 @@ export function EnvironmentalDataModal({session, setLocation}) {
     }, [])
 
     const handleLocationSelect = (latlng) => {
-      console.log(latlng); 
+      // console.log(latlng); 
       recordLocation({lat: latlng.lat, lon: latlng.lng});
       setLocation({lat: latlng.lat, lon: latlng.lng});
     };
   
     const modalStyle = {
+      
       position: 'absolute',
       top: '50%',
       left: '50%',
@@ -267,6 +304,7 @@ export function EnvironmentalDataModal({session, setLocation}) {
       gap: 2,  
       alignItems: 'center',
       justifyContent: 'center',
+      overflowY: 'scroll',
     };
     return (
       <Box>
@@ -276,7 +314,7 @@ export function EnvironmentalDataModal({session, setLocation}) {
         <Modal open={open} onClose={() => {setOpen(false)}}>
           <Box sx={modalStyle}>
             {session?.data?.coords &&
-            <Typography  variant="h6" component="h2"> 
+            <Typography style={{paddingTop: 250,}} variant="h6" component="h2"> 
               {`Lat: ${((session?.data?.coords?.lat)).toFixed(7)}, Lon: ${((session?.data?.coords?.lon)).toFixed(7)}`} 
               </Typography>}
             {location &&
@@ -287,14 +325,19 @@ export function EnvironmentalDataModal({session, setLocation}) {
             <Button variant="contained" color="primary" onClick={() => setMapModalOpen(true)}>
               Select Location
             </Button>
+            <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>
             {(location || session?.data?.coords) && <Button variant="contained" color="primary" onClick={async() => {
               let data = await fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id, dispatch)
               setLocationData(data);
               }}>
               Get Location Data
             </Button>}
-            <MapModal open={MapModalOpen} coords={session?.data?.coords} location={location}onClose={() => setMapModalOpen(false)} onLocationSelect={handleLocationSelect} />
+            {openHeightMap && <Box sx={{ paddingTop: 2, width: '75vw', height: '150vh', margin: 'auto' }}>
+              <div id="map-container" style={{ width: '100%', height: '100%',  }} />
+            </Box>}
+            {MapModalOpen && <MapModal open={MapModalOpen} coords={session?.data?.coords} location={location}onClose={() => setMapModalOpen(false)} onLocationSelect={handleLocationSelect} />}
             {session?.data?.coords && <LineChart/>}
+
           </Box>
         </Modal>
       </Box>
@@ -368,12 +411,7 @@ const chartConfigs = [
     }
   }
 ]
-
-/*
-
-        snow_total: 0,
-        wspd: 0,
-*/
+ 
 
 function useViewportSize(scale = 0.50) {
   const [size, setSize] = useState({ width: 0, height: 0 });
