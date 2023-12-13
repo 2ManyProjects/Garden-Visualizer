@@ -241,38 +241,7 @@ export function EnvironmentalDataModal({session, setLocation}) {
     const [locationData, setLocationData] = useState(null);
     const { width, height } = useViewportSize();
   
-    // useEffect(() => {
-    //   if (openHeightMap) {
-    //     // console.log(location?.lat || session?.data?.coords?.lat, location?.lon || session?.data?.coords?.lon);
-    //     var map = new mapboxgl.Map({
-    //       container: 'map-container',
-    //       style: 'mapbox://styles/mapbox/outdoors-v11',
-    //       center: [location?.lon || session?.data?.coords?.lon, location?.lat || session?.data?.coords?.lat],
-    //       zoom: 13,
-          
-    //     });
-  
-    //     map.on('load', () => {
-    //       map.addSource('mapbox-dem', {
-    //         'type': 'raster-dem',
-    //         'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-    //         'tileSize': 512,
-    //         'maxzoom': 15
-    //       });
-    //       map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-          
-    //     });
-    //   }else {
-    //     if(map)
-    //       map.remove();
-    //   }
-  
-    //   return () => {
-    //     if (map) {
-    //       map.remove();
-    //     }
-    //   };
-    // }, [openHeightMap, location?.lat, location?.lon, session?.data?.coords?.lat, session?.data?.coords?.lon]);
+
 
     useEffect(()=> {
       const cacheCheck = localStorage.getItem(`GardenPlanStorage-${session.id}-${startDate}-${endDate}`);
@@ -383,6 +352,7 @@ const chartConfigs = [
       keys: ["tempAvr", "tempMax", "tempMin"],
       title: "Temp",
       unit: "°C",
+      isAlmanac: false,
       range: {
         "tempMax": 'red',
         "tempMin": 'blue',
@@ -396,6 +366,7 @@ const chartConfigs = [
       keys: ["rHumAvr", "rHumMax", "rHumMin"],
       title: "Humidity",
       unit: "%",
+      isAlmanac: false,
       range: {
         "rHumMax": 'red',
         "rHumMin": 'blue',
@@ -409,6 +380,7 @@ const chartConfigs = [
       keys: ["precip_total"],
       title: "Percipitation",
       unit: "",
+      isAlmanac: false,
       range: {
         "precip_total": 'blue',
       }, 
@@ -420,6 +392,7 @@ const chartConfigs = [
       keys: ["snow_total"],
       title: "Snow",
       unit: "",
+      isAlmanac: false,
       range: {
         "snow_total": 'blue',
       }, 
@@ -431,12 +404,52 @@ const chartConfigs = [
       keys: ["wspd"],
       title: "Humidity",
       unit: "",
+      isAlmanac: false,
       range: {
         "wspd": 'orange',
       }, 
     }
-  }
+  },
+  {
+    label: "Almanac Temperature",
+    value: {
+      keys: ["temperatureMean", "temperatureAverageMax", "temperatureAverageMin"],
+      title: "Temp",
+      unit: "°C",
+      isAlmanac: true,
+      range: {
+        "temperatureAverageMax": 'red',
+        "temperatureAverageMin": 'blue',
+        "temperatureMean": 'orange',
+      }, 
+    }
+  },
+  {
+    label: "Almanac Percipitation",
+    value: {
+      keys: ["precipitationAverage"],
+      title: "Percipitation",
+      unit: "",
+      isAlmanac: true,
+      range: {
+        "precipitationAverage": 'blue',
+      }, 
+    }
+  },
+  {
+    label: "Almanac Snow",
+    value: {
+      keys: ["snowAccumulationAverage"],
+      title: "Snow",
+      unit: "",
+      isAlmanac: true,
+      range: {
+        "snowAccumulationAverage": 'blue',
+      }, 
+    }
+  },
 ]
+
  
 
 function useViewportSize(scale = 0.50) {
@@ -461,9 +474,14 @@ function useViewportSize(scale = 0.50) {
 
 const LineChart = () => {
   const svgRef = useRef(null);
-  const { historicalData } = useSelector(state => state.garden);
+  const { historicalData, almanacData } = useSelector(state => state.garden);
   const [accessors, setAccessors] = useState({
-    xAccessor: (d) => new Date(`${d?.date}T00:00:00`),
+    xAccessor: (d) => {
+      // if(!selectedOption.isAlmanac)
+        return new Date(`${d?.date}T00:00:00`)
+      // else
+      // return new Date(`${new Date().getFullYear}-${monthArrDate[d?.date]} T00:00:00`)
+    },
     yAccessor: (d) => d?.y,
   });
   const [mousePos, setMousePos] = useState({x: 0, y: 0});
@@ -471,12 +489,17 @@ const LineChart = () => {
   const [selectedOption, setSelectedOption] = useState('');
   const [toolTipData, setToolTipData] = useState(null);
   const { width, height } = useViewportSize(0.60);
-
+  const monthArr = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept" ,"Oct", "Nov", "Dec"];
+  const monthArrDate = ["01-01", "02-01", "03-01", "04-01", "05-01", "06-01", "07-01", "08-01", "09-01" ,"10-01", "11-01", "12-01"];
   
 
   const handleMouseMove = (event) => {
+    const rect = event.target.getBoundingClientRect();
+    const relX = event.clientX - rect.left; // X position within the element
+    const relY = event.clientY - rect.top;
+    console.log(`${relX}, ${relY}`)
     // Assuming you have a ref to your SVG element
-    const point = localPoint(svgRef.current || event.target, event);
+    const point = localPoint(svgRef.current, event);
     if (point) {
       let x = point.x;
       const y = point.y;
@@ -488,8 +511,10 @@ const LineChart = () => {
         return
       x -= deadZone;
       if(chartData){
+        // console.log(chartData)
         let keys = Object.keys(chartData);
         let index = Math.min(Math.floor((x / Math.floor(0.95 * w)) * chartData[keys[0]].length), chartData[keys[0]].length-1);
+        // console.log(index)
         // console.log(index, chartData[keys[0]].length)
         let tipData = {
           date:  chartData[keys[0]][index].date
@@ -506,29 +531,52 @@ const LineChart = () => {
   const handleSelectChange = (event) => {
     setSelectedOption(event.target.value); 
     let selected = event.target.value; 
+    if(selected === null){
+      setChartData(selected)
+      return;
+    }
     // console.log(selected);
     let cData = {}
     for(let x = 0; x < selected.keys.length; x++){
       cData[selected.keys[x]] = [];
     }
-    // console.log(Object.keys(historicalData));
-    if(historicalData && Object.keys(historicalData).length >  0){
-      let months = Object.keys(historicalData);
-      for(let i = 0; i < months.length; i++){
-        let monthData = historicalData[months[i]];
-        for(let y = 0; y < monthData.length; y++){
-          let day = monthData[y];
-
+    if(!selected.isAlmanac){
+      // console.log(Object.keys(historicalData));
+      if(historicalData && Object.keys(historicalData).length >  0){
+        let months = Object.keys(historicalData);
+        for(let i = 0; i < months.length; i++){
+          let monthData = historicalData[months[i]];
+          for(let y = 0; y < monthData.length; y++){
+            let day = monthData[y];
+  
+            for(let x = 0; x < selected.keys.length; x++){
+              cData[selected.keys[x]].push({
+                date: day.date,
+                y: day[selected.keys[x]],
+              })
+            }
+            
+          }
+        }
+        // console.log(cData)
+      console.log("cData", cData);
+        setChartData(cData)
+      }
+    }else {
+      // console.log(selected.keys, almanacData)
+      if(almanacData && almanacData.length > 0){
+        for(let i = 0; i < almanacData.length; i++){
+          let monthData = almanacData[i];
+          // console.log("monthData",monthData)
           for(let x = 0; x < selected.keys.length; x++){
             cData[selected.keys[x]].push({
-              date: day.date,
-              y: day[selected.keys[x]],
+              date: `${new Date().getFullYear()}-${monthArrDate[i]}`, // i, //monthArr[x],
+              y: monthData[selected.keys[x]],
             })
           }
-          
         }
       }
-      // console.log(cData)
+      console.log("cData", cData);
       setChartData(cData)
     }
   };
@@ -539,7 +587,7 @@ const LineChart = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      width: '100%'
+      width: '100%',
     }}>
 
       {historicalData && <Select
@@ -547,16 +595,18 @@ const LineChart = () => {
           onChange={handleSelectChange}
           fullWidth
         >
+        <MenuItem key={'asdwdad'} value={null}>{`Deselect Chart`}</MenuItem>
           {chartConfigs?.map((option, index) => (
             <MenuItem key={index} value={option.value}>{option.label}</MenuItem>
           ))}
       </Select>}
-      {toolTipData && 
-              <Box style={{flexDirection: "row", display: 'flex',}} >
+      {toolTipData && chartData && 
+              <Box style={{flexDirection: "row", display: 'flex', 
+              pointerEvents: 'none'}} >
                 
                 {/* <Box style={{ display: 'flex', flexDirection: "row", margin: 10 }} >
                     <Typography>
-                      {mousePos?.x}, {mousePos?.y}
+                      {Math.floor(mousePos?.x)}, {Math.floor(mousePos?.y)}
                     </Typography>
                     <br />
                   </Box> */}
@@ -574,32 +624,35 @@ const LineChart = () => {
               </Box>}
       <svg ref={svgRef} 
             width={width}
-            height={height}>
+            height={height} >
         <g>
         {chartData && <XYChart
+        style={{ pointerEvents: 'none' }} 
           height={height}
           width={width}
           xScale={{ type: "time", clamp: true, nice: true }}
           yScale={{ type: "linear", clamp: true, nice: true }}
         >
-          <Grid numTicks={4} />
-          <AnimatedAxis orientation="bottom" numTicks={5} strokeWidth={0.5} />
-          <AnimatedAxis orientation="left" numTicks={4} label={`${selectedOption?.title} (${selectedOption?.unit})`} strokeWidth={0.5} />
+          <Grid  style={{ pointerEvents: 'none' }} numTicks={4} />
+          <AnimatedAxis style={{ pointerEvents: 'none' }}  orientation="bottom" numTicks={5} strokeWidth={0.5} />
+          <AnimatedAxis style={{ pointerEvents: 'none' }} orientation="left" numTicks={4} label={`${selectedOption?.title} (${selectedOption?.unit})`} strokeWidth={0.5} />
           {Object.entries(chartData).map(([key, value]) => (
             <>
-              <AnimatedLineSeries key={key} opacity={0.7} dataKey={key} data={value} {...accessors} />
-              <LineSeries dataKey={key} data={value} {...accessors} stroke={selectedOption?.range[key]}/>
+              <AnimatedLineSeries style={{ pointerEvents: 'none' }} key={key} opacity={0.7} dataKey={key} data={value} {...accessors} />
+              <LineSeries style={{ pointerEvents: 'none' }} dataKey={key} data={value} {...accessors} stroke={selectedOption?.range[key]}/>
             </>
           ))} 
         </XYChart>}
-          <rect
-            width={width* 0.91}
-            height={height}
-            fill="transparent"
-            pointerEvents="visible" 
-            onMouseMove={handleMouseMove}
-          />
         </g>
+          {chartData &&<rect
+            width={width- 100}
+            height={100}
+            y={height * 0.8}
+            x={width * 0.065}
+            fill={'rgba(0, 0, 0, 0.05)'}
+            pointerEvents="all" 
+            onMouseMove={handleMouseMove}
+          />}
       </svg>
     </Box>
   );

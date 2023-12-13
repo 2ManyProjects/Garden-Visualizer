@@ -10,7 +10,7 @@ const initialState = {
   isVisible: true,
   plantMacros: null,
   astroData: null,
-  alamancData: null,
+  almanacData: null,
   historicalData: null,
   plantsInGarden: [],
   gardenAnalysis: null
@@ -58,7 +58,7 @@ export const gardenSlice = createSlice({
         state.astroData = action.payload;
     },
     setAlmanacData: (state, action) => {
-        state.alamancData = action.payload;
+        state.almanacData = action.payload;
     },
     setHistoricalData: (state, action) => {
         state.historicalData = action.payload;
