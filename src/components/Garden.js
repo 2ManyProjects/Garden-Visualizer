@@ -871,7 +871,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
     let equinoxShadowPolygon = null;
     let winterEquinoxShadowPolygon = null;
     
-    if(selectedPermRole && currentSession.data.coords && [selectedPermRole].includes(plant["Perm Role"]) && showShadows && plant.shadow !== false){
+    if(selectedPermRole && currentSession?.data?.coords && [selectedPermRole].includes(plant["Perm Role"]) && showShadows && plant.shadow !== false){
       summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
       equinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-09-22'), plantHeight, currentSession.data.coords);
       // winterEquinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-03-20'), plantHeight, currentSession.data.coords);
