@@ -8,12 +8,12 @@ import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemT
 import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
 
-const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
+const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const fetching = useRef(false);
   const dispatch = useDispatch();
-  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, plantMacros, gardenAnalysis } = useSelector(state => state.garden);
+  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, plantMacros, gardenAnalysis, currentSession } = useSelector(state => state.garden);
   const [selectedPermRole, setSelectedPermRole] = useState('');
   const [open, setOpen] = useState(false);
   const [keys, showKeys] = useState(false);
@@ -175,6 +175,7 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange }) => {
         <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g, K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
         
       </Box>}
+      {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
 
       {selectedPlant && <Modal
         open={open}

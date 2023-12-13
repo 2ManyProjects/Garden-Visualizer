@@ -4,9 +4,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
 import { setAllPlantData, setCurrentSession, setPlantsInGarden } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
+import { Typography, Box, Modal, Button, Select, MenuItem, Dialog, DialogTitle } from '@mui/material';
 import SunCalc from 'suncalc'
-
+import mapboxgl from 'mapbox-gl';
+import {MapModal} from './EnvironmentalDataModal'
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import Map, {Source, Layer} from 'react-map-gl';
+// mapboxgl.accessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
     
+let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 const conversionFactors = {
   cm: parseFloat((1/ 0.01).toFixed(5)), // centimeters to meters
   m: 1, // meters to meters
@@ -17,8 +24,8 @@ const conversionFactors = {
   ha: parseFloat((1/ 100).toFixed(5)), // acre to meters
 };
 const pixelsPerMeter = 10;
-
-const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
+var map = null;
+const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap }) => {
   const dispatch = useDispatch();
   const [modalData, setmodalData] = useState({
     type: null,
@@ -42,7 +49,46 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
 
   const [showShadows, setShowShadows] = useState(true);
 
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const { permRoles, selectedPlants, selectedPlant, plantsInGarden, selectedPermRole, plants, plantMacros, currentSession, astroData } = useSelector(state => state.garden); 
+
+    
+  // useEffect(() => {
+  //   if (openHeightMap) {
+  //     setTimeout(() => {
+
+  //     // console.log(location?.lat || session?.data?.coords?.lat, location?.lon || session?.data?.coords?.lon);
+  //     map = new mapboxgl.Map({
+  //       container: 'map-container',
+  //       style: 'mapbox://styles/mapbox/outdoors-v11',
+  //       center: [currentSession?.data?.coords?.lon,  currentSession?.data?.coords?.lat],
+  //       zoom: 13,
+        
+  //     });
+
+  //     map.on('load', () => {
+  //       map.addSource('mapbox-dem', {
+  //         'type': 'raster-dem',
+  //         'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+  //         'tileSize': 512,
+  //         'maxzoom': 15
+  //       });
+  //       map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+        
+  //     });
+  //     }, 50)
+  //   }else {
+  //     if(map)
+  //       map.remove();
+  //   }
+
+  //   return () => {
+  //     if (map) {
+  //       map.remove();
+  //     }
+  //   };
+  // }, [openHeightMap,  currentSession?.data?.coords?.lat, currentSession?.data?.coords?.lon]);
   const svgRef = useRef();
   useEffect(() => {
     setPoints([]);
@@ -999,6 +1045,49 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions }) => {
           <text x={textX} y={lineHeight * 5} fontWeight="bold">
             {`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`}
           </text>
+
+          <Modal 
+          open={openHeightMap}
+          style={{
+            position: 'absolute',
+            top: '45%',
+            left: '70%',
+            height: '40vh',
+            transform: 'translate(0, 0)',
+            width: "25vw",
+            bgcolor: 'background.paper',
+            overflowY: 'scroll'}}
+          disableEnforceFocus
+          slotProps={{backdrop: {
+            style: {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+            },
+            onClick: (event) => {
+              console.log(event)
+            }
+          }}} 
+          >
+            <Map
+              mapboxAccessToken={mapAccessToken}
+              mapLib={import('mapbox-gl')}
+              initialViewState={{
+                longitude: currentSession?.data?.coords?.lon,
+                latitude: currentSession?.data?.coords?.lat,
+                zoom: 14
+              }}
+              mapStyle="mapbox://styles/mapbox/outdoors-v11"
+            >
+              <Source
+                id="mapbox-dem"
+                type="raster-dem"
+                url="mapbox://mapbox.mapbox-terrain-dem-v1"
+                tileSize={512}
+                maxzoom={16}
+              />
+            </Map>
+            {/* <div id="map-container"  /> */}
+          </Modal>
           {/* <text x={textX} y={lineHeight * 6} fontWeight="bold">
             {`fontSize: ${adjustedFontSize.toFixed(2)}`}
           </text>

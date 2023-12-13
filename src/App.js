@@ -7,6 +7,7 @@ function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [clearGarden, setClearGarden] = useState(false);
   const [gardenDimensions, setGardenDimensions] = useState({  unit: null });
+  const [openHeightMap, setOpenHeightMap] = useState(false);
  
   const handleGardenDimensionsChange = (unit) => {
     setGardenDimensions({  unit });
@@ -18,10 +19,14 @@ function App() {
       setEditing={setIsEditing} 
       clearGarden={setClearGarden} 
       onGardenDimensionsChange={handleGardenDimensionsChange} 
+      setOpenHeightMap={setOpenHeightMap}
+      openHeightMap={openHeightMap}
       />
       <Garden 
       isEditing={isEditing} 
       clearGarden={clearGarden}
+      openHeightMap={openHeightMap}
+      setOpenHeightMap={setOpenHeightMap}
       gardenDimensions={gardenDimensions} />
     </div>
   );

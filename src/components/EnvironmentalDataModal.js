@@ -14,6 +14,7 @@ import { localPoint } from '@visx/event';
 import { LegendThreshold } from '@visx/legend';
 import { scaleThreshold } from '@visx/scale';
 import mapboxgl from 'mapbox-gl';
+import Map, {Source, Layer} from 'react-map-gl';
 import {
   AnimatedAxis,
   AnimatedGrid,
@@ -29,7 +30,7 @@ import {
    LineSeries
 } from "@visx/xychart";
 
-mapboxgl.accessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
+let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 function LocationMarker({ onClick }) {
     useMapEvents({
       click(e) {
@@ -240,38 +241,38 @@ export function EnvironmentalDataModal({session, setLocation}) {
     const [locationData, setLocationData] = useState(null);
     const { width, height } = useViewportSize();
   
-    useEffect(() => {
-      if (openHeightMap) {
-        // console.log(location?.lat || session?.data?.coords?.lat, location?.lon || session?.data?.coords?.lon);
-        var map = new mapboxgl.Map({
-          container: 'map-container',
-          style: 'mapbox://styles/mapbox/outdoors-v11',
-          center: [location?.lon || session?.data?.coords?.lon, location?.lat || session?.data?.coords?.lat],
-          zoom: 13,
+    // useEffect(() => {
+    //   if (openHeightMap) {
+    //     // console.log(location?.lat || session?.data?.coords?.lat, location?.lon || session?.data?.coords?.lon);
+    //     var map = new mapboxgl.Map({
+    //       container: 'map-container',
+    //       style: 'mapbox://styles/mapbox/outdoors-v11',
+    //       center: [location?.lon || session?.data?.coords?.lon, location?.lat || session?.data?.coords?.lat],
+    //       zoom: 13,
           
-        });
+    //     });
   
-        map.on('load', () => {
-          map.addSource('mapbox-dem', {
-            'type': 'raster-dem',
-            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-            'tileSize': 512,
-            'maxzoom': 15
-          });
-          map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+    //     map.on('load', () => {
+    //       map.addSource('mapbox-dem', {
+    //         'type': 'raster-dem',
+    //         'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+    //         'tileSize': 512,
+    //         'maxzoom': 15
+    //       });
+    //       map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
           
-        });
-      }else {
-        if(map)
-          map.remove();
-      }
+    //     });
+    //   }else {
+    //     if(map)
+    //       map.remove();
+    //   }
   
-      return () => {
-        if (map) {
-          map.remove();
-        }
-      };
-    }, [openHeightMap, location?.lat, location?.lon, session?.data?.coords?.lat, session?.data?.coords?.lon]);
+    //   return () => {
+    //     if (map) {
+    //       map.remove();
+    //     }
+    //   };
+    // }, [openHeightMap, location?.lat, location?.lon, session?.data?.coords?.lat, session?.data?.coords?.lon]);
 
     useEffect(()=> {
       const cacheCheck = localStorage.getItem(`GardenPlanStorage-${session.id}-${startDate}-${endDate}`);
@@ -332,9 +333,34 @@ export function EnvironmentalDataModal({session, setLocation}) {
               }}>
               Get Location Data
             </Button>}
-            {openHeightMap && <Box sx={{ paddingTop: 2, width: '75vw', height: '150vh', margin: 'auto' }}>
-              <div id="map-container" style={{ width: '100%', height: '100%',  }} />
-            </Box>}
+            <Box 
+          style={{
+            position: 'absolute',
+            top: '50%',
+            height: '50vh',
+            transform: 'translate(0, 0)',
+            width: "50vw",
+            overflowY: 'scroll'}}>
+              {openHeightMap && 
+              <Map
+                mapboxAccessToken={mapAccessToken}
+                mapLib={import('mapbox-gl')}
+                initialViewState={{
+                  longitude: session?.data?.coords?.lon,
+                  latitude: session?.data?.coords?.lat,
+                  zoom: 14
+                }}
+                mapStyle="mapbox://styles/mapbox/outdoors-v11"
+              >
+                <Source
+                  id="mapbox-dem"
+                  type="raster-dem"
+                  url="mapbox://mapbox.mapbox-terrain-dem-v1"
+                  tileSize={512}
+                  maxzoom={16}
+                />
+              </Map>}
+            </Box>
             {MapModalOpen && <MapModal open={MapModalOpen} coords={session?.data?.coords} location={location}onClose={() => setMapModalOpen(false)} onLocationSelect={handleLocationSelect} />}
             {session?.data?.coords && <LineChart/>}
 
