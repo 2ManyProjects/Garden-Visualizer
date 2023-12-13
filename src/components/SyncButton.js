@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import {   Button } from '@mui/material';
 
 
-const SyncButton = ({disabled, fetchSheetData}) => {
+const SyncButton = ({disabled, fetchSheetData, sx}) => {
   const dispatch = useDispatch();
 
   const handleSync = async () => {
@@ -13,7 +13,7 @@ const SyncButton = ({disabled, fetchSheetData}) => {
 
 
   return (
-    <Button onClick={handleSync} disabled={disabled}>Sync</Button>
+    <Button sx onClick={handleSync} disabled={disabled}>Sync</Button>
   );
 };
 

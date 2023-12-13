@@ -6,7 +6,7 @@ import TreeIcon from '@mui/icons-material/EmojiNature';
 import { setSelectedPlant } from '../redux/gardenSlice'; 
 
 
-const PlantIcons = ({isPlantSelectorEnabled, isEditing}) => {
+const PlantIcons = ({isPlantSelectorEnabled, isEditing, maxHeight}) => {
   const dispatch = useDispatch();
     const { selectedPlants, selectedPermRole, selectedPlant } = useSelector(state => state.garden);
 
@@ -16,12 +16,11 @@ const PlantIcons = ({isPlantSelectorEnabled, isEditing}) => {
     }, [isEditing])
   
     return (
-    <FormControl style={{ maxWidth: 400, minWidth: 200,  margin: '10px' }} disabled={!isPlantSelectorEnabled}>
-      <InputLabel id="plant-icon-select-label">Plant</InputLabel>
+    <FormControl disabled={!isPlantSelectorEnabled} sx={{paddingRight: 2}}>
+      <InputLabel>Plant</InputLabel>
       <Select
-        labelId="plant-icon-select-label"
-        id="plant-icon-select"
         // value={selectedValue}
+        sx={{maxHeight: maxHeight, minWidth: 100}}
         label="Plant"
         onChange={(e) => dispatch(setSelectedPlant(e.target.value))}
       >

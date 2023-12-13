@@ -128,190 +128,196 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
   };
 
   return (
-    <Toolbar>
-    <Button onClick={() => {
-      showKeys(true)
-      }}>Help/KeyBinds</Button>
-        <FormControl>
-            <InputLabel>Unit</InputLabel>
-            <Select value={unit} label="Unit" onChange={(e) => setUnit(e.target.value)}>
-                <MenuItem value="cm">cm</MenuItem>
-                <MenuItem value="m">m</MenuItem>
-                <MenuItem value="in">in</MenuItem>
-                <MenuItem value="ft">ft</MenuItem>
-                <MenuItem value="y">yards</MenuItem>
-                <MenuItem value="ac">acre</MenuItem>
-                <MenuItem value="ha">hectare</MenuItem>
-            </Select>
-    </FormControl>
+  <Toolbar>
+    <Box sx={{display: 'flex', maxHeight: 50, flexDirection: 'row', justifyContent: 'space-between', width: "100%"}}>
+      <Box>
+        <Box sx={{display: 'flex', flexDirection: 'column'}}>
+          <Button sx={{maxHeight: 20}} onClick={() => {
+            showKeys(true)
+            }}>Help</Button>
+          <SyncButton  sx={{maxHeight: 20}}  disabled={isFetching} fetchSheetData={fetchSheetData}/> 
+        </Box>
+      </Box>
+      <Box sx={{ paddingTop: 1}}>
+        <FormControl sx={{paddingRight: 2}}>
+          <InputLabel>Unit</InputLabel>
+          <Select sx={{maxHeight: 30}}value={unit} onChange={(e) => setUnit(e.target.value)}>
+              <MenuItem value="cm">cm</MenuItem>
+              <MenuItem value="m">m</MenuItem>
+              <MenuItem value="in">in</MenuItem>
+              <MenuItem value="ft">ft</MenuItem>
+              <MenuItem value="y">yards</MenuItem>
+              <MenuItem value="ac">acre</MenuItem>
+              <MenuItem value="ha">hectare</MenuItem>
+          </Select>
+        </FormControl>
 
 
-    <SyncButton  disabled={isFetching} fetchSheetData={fetchSheetData}/> 
 
-    {permRoles.length > 0 && <FormControl style={{ maxWidth: 400, minWidth: 200,  margin: '10px' }}>
-      <InputLabel id="plant-icon-select-label">Role</InputLabel>
-      <Select
-        labelId="role-icon-select-label"
-        id="role-icon-select"
-        value={selectedPermRole}
-        label="Plant"
-        onChange={handlePermRoleChange}
-      >
-        {permRoles.map(permRole => <MenuItem key={permRole} value={permRole}>
-          <ListItemText primary={permRole} />
-        </MenuItem>)}
-         
-      </Select>
-    </FormControl> }
-      {selectedPlants?.length > 0 && <PlantIcons isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />} 
-      {/* {selectedPlants.length > 0 && <Button onClick={handleVisibilityToggle}>Toggle Visibility</Button>} */}
-      {selectedPlant && <Button onClick={handleOpen}>Info/Plant Config</Button>}
-      <Button onClick={toggleEdit}>{isEditing ? '- Points' : '+ Points'}</Button>
-      <Button onClick={() => {
-        clearGarden(true)
-        setTimeout(() => { clearGarden(false)}, 50)
-        }}>Clear Garden</Button>
-      {gardenAnalysis && <Box>
-        <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g, K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
-        
-      </Box>}
+        {permRoles.length > 0 && <FormControl sx={{paddingRight: 2}}>
+          <InputLabel>Role</InputLabel>
+          <Select
+            sx={{maxHeight: 30, minWidth: 50}} 
+            value={selectedPermRole}
+            onChange={handlePermRoleChange}
+          >
+            {permRoles.map(permRole => <MenuItem key={permRole} value={permRole}>
+              <ListItemText primary={permRole} />
+            </MenuItem>)}
+            
+          </Select>
+        </FormControl> }
+          {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />} 
+          {/* {selectedPlants.length > 0 && <Button onClick={handleVisibilityToggle}>Toggle Visibility</Button>} */}
+          {selectedPlant && <Button onClick={handleOpen}>Info/Plant Config</Button>}
+          <Button onClick={toggleEdit}>{isEditing ? '- Points' : '+ Points'}</Button>
+          <Button sx={{color: 'red'}} onClick={() => {
+            clearGarden(true)
+            setTimeout(() => { clearGarden(false)}, 50)
+            }}>DELETE</Button>
+          {gardenAnalysis && (gardenAnalysis.nReq.toFixed(2) !== "0.00" || gardenAnalysis.kReq.toFixed(2) !== "0.00") && <Box sx={{display: 'flex', flexDirection: 'column'}}>
+            <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g`}</Typography>  
+            <Typography>{`K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
+            
+          </Box>}
+      </Box>
+
+      <Box sx={{ paddingTop: 1}}>
+        {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
+        <Button onClick={() => setOpenFeedBackModal(true)}>Feedback</Button>
+        <Button onClick={() => setOpenPlantModal(true)}>New Plant</Button>
+      </Box>
+    </Box>
 
 
-      {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
-      <Button onClick={() => setOpenFeedBackModal(true)}>Feedback</Button>
-      <Button onClick={() => setOpenPlantModal(true)}>New Plant</Button>
+    <FeedbackModal open={openFeedBackModal} handleClose={() => setOpenFeedBackModal(false)} />
+    {plantMacros?.plantMacroRequirements && <PlantSubmitModal open={openPlantModal} handleClose={() => setOpenPlantModal(false)} />}
+    {selectedPlant && <Modal
+      open={open}
+      onClose={handleClose}
+    >
+      <Box sx={{
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        overflowY: 'scroll',
+        height: '80%'
+      }}>
+        <Typography  sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} id="rename-modal" variant="h6" component="h2">
+        Info: {selectedPlant?.Name}, {selectedPlant?.Latin}
+        </Typography>
 
+        {selectedPlant && Object.keys(selectedPlant).sort().map((item, index) => {
+          const regex = /(\d+(\.\d+)?)-(\d+(\.\d+)?)/;
+          if( ["sheetIndex", "Image", "path", "Name", "Latin",  "id", "local", "shadow", "nutrientCalc"].includes(item) || /^usr/.test(item))
+            return null
 
-      <FeedbackModal open={openFeedBackModal} handleClose={() => setOpenFeedBackModal(false)} />
-      {plantMacros?.plantMacroRequirements && <PlantSubmitModal open={openPlantModal} handleClose={() => setOpenPlantModal(false)} />}
-      {selectedPlant && <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="rename-modal"
-        aria-describedby="rename-modal-description"
-      >
-        <Box sx={{
-          justifyContent: 'center',
-          alignItems: 'center',
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            bgcolor: 'background.paper',
-            boxShadow: 24,
-            p: 4,
-        }}>
-          <Typography  sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} id="rename-modal" variant="h6" component="h2">
-          Info: {selectedPlant?.Name}, {selectedPlant?.Latin}
-          </Typography>
-
-          {selectedPlant && Object.keys(selectedPlant).map((item, index) => {
-            const regex = /(\d+(\.\d+)?)-(\d+(\.\d+)?)/;
-            if( ["sheetIndex", "Image", "path", "Name", "Latin"].includes(item) || /^usr/.test(item))
-              return null
-
-              if(selectedPlant[item] !== null && regex.test(selectedPlant[item])){
+            if(selectedPlant[item] !== null && regex.test(selectedPlant[item])){
+              return(
+                <NumberRangeInput rangeString={selectedPlant[item]} keyName={item} currentVal={selectedPlant["usr"+item] || selectedPlant[item]} setPlantData={(numValue, keyName) => {
+                  let plant = {...selectedPlant};
+                  plant[keyName] = numValue;
+                  dispatch(setSelectedPlant({...plant, local: true}))
+                }} />
+              )
+            }
+          return (
+            <Typography sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} key={index} fontWeight="bold">
+              {typeof selectedPlant[item] !== "object" && `${item !== "Variety|Rootstock" ? item : "Rootstock"}:  ${selectedPlant[item] }`}
+              {selectedPlant[item] && typeof selectedPlant[item] === "object" && <Box>
+                <Typography  sx={{ textDecoration: 'underline', display: 'flex',justifyContent: 'center',alignItems: 'center'}} variant="h8" component="h3">
+                {item}
+                </Typography>
+                {Object.keys(selectedPlant[item]).map((key, keyIndex) => {
                 return(
-                  <NumberRangeInput rangeString={selectedPlant[item]} keyName={item} currentVal={selectedPlant["usr"+item] || selectedPlant[item]} setPlantData={(numValue, keyName) => {
-                    let plant = {...selectedPlant};
-                    plant[keyName] = numValue;
-                    dispatch(setSelectedPlant({...plant, local: true}))
-                  }} />
-                )
-              }
-            return (
-              <Typography sx={{ display: 'flex',justifyContent: 'center',alignItems: 'center'}} key={index} fontWeight="bold">
-                {typeof selectedPlant[item] !== "object" && `${item}:  ${selectedPlant[item] }`}
-                {selectedPlant[item] && typeof selectedPlant[item] === "object" && <Box>
-                  <Typography  sx={{ textDecoration: 'underline', display: 'flex',justifyContent: 'center',alignItems: 'center'}} variant="h8" component="h3">
-                  {item}
+                  <Typography key={keyIndex} fontWeight="bold">
+                    {`${key}:  ${selectedPlant[item][key]}`}
                   </Typography>
-                  {Object.keys(selectedPlant[item]).map((key, keyIndex) => {
-                  return(
-                    <Typography key={keyIndex} fontWeight="bold">
-                      {`${key}:  ${selectedPlant[item][key]}`}
-                    </Typography>
-                  )
-                })}
-                  </Box>}
-              </Typography>
-            )
-          })}
-          {selectedPlant && (
-            <ToggleButton selected={!Object.keys(selectedPlant).includes("nutrientCalc")? true : selectedPlant.nutrientCalc}
-            onChange={(e)=>{
-              let val = !selectedPlant.nutrientCalc;
-              if(!Object.keys(selectedPlant).includes("nutrientCalc")){
-                val = false;
-              }
-              let plant = {...selectedPlant};
-              plant.nutrientCalc = val;
-              dispatch(setSelectedPlant({...plant, local: true}))
-            }}>
-              Include in Nutrient Calc
-            </ToggleButton>
-          )}
+                )
+              })}
+                </Box>}
+            </Typography>
+          )
+        })}
+        {selectedPlant && (
+          <ToggleButton selected={!Object.keys(selectedPlant).includes("nutrientCalc")? true : selectedPlant.nutrientCalc}
+          onChange={(e)=>{
+            let val = !selectedPlant.nutrientCalc;
+            if(!Object.keys(selectedPlant).includes("nutrientCalc")){
+              val = false;
+            }
+            let plant = {...selectedPlant};
+            plant.nutrientCalc = val;
+            dispatch(setSelectedPlant({...plant, local: true}))
+          }}>
+            Include in Nutrient Calc
+          </ToggleButton>
+        )}
 
-          {selectedPlant && (
-            <ToggleButton selected={!Object.keys(selectedPlant).includes("shadow")? true : selectedPlant.shadow}
-            onChange={(e)=>{
-              let val = !selectedPlant.shadow;
-              if(!Object.keys(selectedPlant).includes("shadow")){
-                val = false;
-              }
-              let plant = {...selectedPlant};
-              plant.shadow = val;
-              dispatch(setSelectedPlant({...plant, local: true}))
-            }}>
-              Calc Shadows
-            </ToggleButton>
+        {selectedPlant && (
+          <ToggleButton selected={!Object.keys(selectedPlant).includes("shadow")? true : selectedPlant.shadow}
+          onChange={(e)=>{
+            let val = !selectedPlant.shadow;
+            if(!Object.keys(selectedPlant).includes("shadow")){
+              val = false;
+            }
+            let plant = {...selectedPlant};
+            plant.shadow = val;
+            dispatch(setSelectedPlant({...plant, local: true}))
+          }}>
+            Calc Shadows
+          </ToggleButton>
 
-          )}
+        )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <Button onClick={handleClose}>Close</Button>
-          </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Button onClick={handleClose}>Close</Button>
         </Box>
-      </Modal>}
-      <Modal
-        open={keys}
-        onClose={handleCloseKeys}
-        aria-labelledby="rename-modal"
-        aria-describedby="rename-modal-description"
-      >
-        <Box sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            bgcolor: 'background.paper',
-            boxShadow: 24,
-            p: 4,
-        }}>
-          <Typography id="rename-modal" variant="h6" component="h2">
-          KeyBindings and Tips
-          </Typography>
-          <Typography fontWeight="bold">
-            {`Zoom In/Out/Reset: +/-/Space`}
-          </Typography>
-          <Typography fontWeight="bold">
-            {`Camera Move: Middle Mouse Drag`}
-          </Typography>
-          <Typography fontWeight="bold">
-            {`Delete:  Right Click`}
-          </Typography>
-          <Typography fontWeight="bold">
-            {`Zoom in to select easier`}
-          </Typography>
+      </Box>
+    </Modal>}
+    <Modal
+      open={keys}
+      onClose={handleCloseKeys}
+    >
+      <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+      }}>
+        <Typography id="rename-modal" variant="h6" component="h2">
+        KeyBindings and Tips
+        </Typography>
+        <Typography fontWeight="bold">
+          {`Zoom In/Out/Reset: +/-/Space`}
+        </Typography>
+        <Typography fontWeight="bold">
+          {`Camera Move: Middle Mouse Drag`}
+        </Typography>
+        <Typography fontWeight="bold">
+          {`Delete:  Right Click`}
+        </Typography>
+        <Typography fontWeight="bold">
+          {`Zoom in to select easier`}
+        </Typography>
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <Button onClick={handleCloseKeys}>Close</Button>
-          </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Button onClick={handleCloseKeys}>Close</Button>
         </Box>
-      </Modal>
-    </Toolbar>
+      </Box>
+    </Modal>
+  </Toolbar>
   );
 };
 
@@ -410,7 +416,7 @@ const FeedbackModal = ({ open, handleClose }) => {
         <TextareaAutosize
           minRows={3}
           maxRows={6}
-          placeholder="Any Feature requests, bugs, plant submissions (max 500 characters)"
+          placeholder={`Any Feature requests, bugs, plant submissions (max ${maxLength} characters)`}
           style={{ width: '100%' }}
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
