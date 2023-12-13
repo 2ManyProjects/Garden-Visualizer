@@ -6,6 +6,8 @@ import './App.css';
 function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [clearGarden, setClearGarden] = useState(false);
+  const [openFeedBackModal, setOpenFeedBackModal] = useState(false);
+  const [openPlantModal, setOpenPlantModal] = useState(false);
   const [gardenDimensions, setGardenDimensions] = useState({  unit: null });
   const [openHeightMap, setOpenHeightMap] = useState(false);
  
@@ -21,13 +23,19 @@ function App() {
       onGardenDimensionsChange={handleGardenDimensionsChange} 
       setOpenHeightMap={setOpenHeightMap}
       openHeightMap={openHeightMap}
+      setOpenFeedBackModal={setOpenFeedBackModal}
+      openFeedBackModal={openFeedBackModal}
+      setOpenPlantModal={setOpenPlantModal}
+      openPlantModal={openPlantModal}
       />
       <Garden 
       isEditing={isEditing} 
       clearGarden={clearGarden}
       openHeightMap={openHeightMap}
       setOpenHeightMap={setOpenHeightMap}
-      gardenDimensions={gardenDimensions} />
+      gardenDimensions={gardenDimensions}
+      setOpenFeedBackModal={setOpenFeedBackModal}
+      openFeedBackModal={openFeedBackModal} />
     </div>
   );
 }

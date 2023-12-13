@@ -11,7 +11,7 @@ import {MapModal} from './EnvironmentalDataModal'
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Map, {Source, Layer} from 'react-map-gl';
-// mapboxgl.accessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
+
     
 let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 const conversionFactors = {
@@ -25,7 +25,7 @@ const conversionFactors = {
 };
 const pixelsPerMeter = 10;
 var map = null;
-const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap }) => {
+const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal }) => {
   const dispatch = useDispatch();
   const [modalData, setmodalData] = useState({
     type: null,
@@ -1064,7 +1064,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
               boxShadow: 'none',
             },
             onClick: (event) => {
-              console.log(event)
+              // console.log(event)
             }
           }}} 
           >

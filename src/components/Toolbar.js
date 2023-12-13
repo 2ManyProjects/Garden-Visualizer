@@ -4,11 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setPermRole, toggleVisibility, setSelectedPlant, setGardenAnalysis, setPlantMacroData, setRoles, setAllPlantData } from '../redux/gardenSlice'; // Import setPlantData
 import SyncButton from './SyncButton';
 import PlantIcons from './PlantIcons';
-import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography, ToggleButton  } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography, ToggleButton, TextareaAutosize, FormControlLabel, Checkbox, OutlinedInput, Chip,  } from '@mui/material';
 import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
 
-const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap }) => {
+const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setOpenPlantModal,openPlantModal}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const fetching = useRef(false);
@@ -175,8 +175,15 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
         <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g, K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
         
       </Box>}
-      {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
 
+
+      {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
+      <Button onClick={() => setOpenFeedBackModal(true)}>Feedback</Button>
+      <Button onClick={() => setOpenPlantModal(true)}>New Plant</Button>
+
+
+      <FeedbackModal open={openFeedBackModal} handleClose={() => setOpenFeedBackModal(false)} />
+      {plantMacros?.plantMacroRequirements && <PlantSubmitModal open={openPlantModal} handleClose={() => setOpenPlantModal(false)} />}
       {selectedPlant && <Modal
         open={open}
         onClose={handleClose}
@@ -360,5 +367,468 @@ const NumberRangeInput = ({ rangeString, keyName, setPlantData, currentVal }) =>
         </Box>
 
     </Box>
+  );
+};
+
+const FeedbackModal = ({ open, handleClose }) => {
+  const [feedback, setFeedback] = useState('');
+
+  const handleSubmit = async () => {
+    // console.log(feedback);
+    
+    var config = {
+      method: 'post',
+      url: 'https://ytwwg98ey8.execute-api.ca-central-1.amazonaws.com/prod/v1/anon/feedback',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: { message: feedback},
+      // params: {consume: true}
+    };
+  
+    let sendFeedbackRequest = await axios(config) 
+    // console.log(sendFeedbackRequest)
+    handleClose();
+  };
+  const maxLength = 1000;
+  return (
+    <Modal open={open} onClose={handleClose}>
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}>
+        <Typography variant="h6">Feedback</Typography>
+        <TextareaAutosize
+          minRows={3}
+          maxRows={6}
+          placeholder="Any Feature requests, bugs, plant submissions (max 500 characters)"
+          style={{ width: '100%' }}
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          maxLength={maxLength}
+        />
+        <Button variant="contained" onClick={handleSubmit} disabled={feedback.length === 0 || feedback.length > maxLength}>
+          Submit
+        </Button>
+        <Button variant="contained" onClick={handleClose}>
+          Close
+        </Button>
+      </Box>
+    </Modal>
+  );
+};
+
+
+const PlantSubmitModal = ({ open, handleClose }) => {
+  const [plantData, setPlantData] = useState({
+    "Crop Type": "",
+    "Crown Spread (m)": "",
+    "Latin": "",
+    "Lifespan": "",
+    "Max Height": "",
+    "Cultivar": "",
+    "Name": "",
+    "Perm Role": "",
+    "Root Depth (m)": "",
+    "Root System": "",
+    "Source": "",
+    "Usage Notes": "",
+    "Variety|Rootstock": "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [showYieldStructure, setShowYieldStructure] = useState(false);
+  // Add state for Yield Structure fields
+  const [yieldStructure, setYieldStructure] = useState({
+    harvestUnit: "",
+    peakYield: "",
+    peakYieldEnd: "",
+    peakYieldStart: "",
+    timeUnit: "",
+    yieldEnd: "",
+    yieldStart: "",
+    anYieldUnit: "",
+    anYieldStart: "",
+    anYieldEnd: ""
+  });
+
+  const { permRoles, selectedPlants, selectedPlant, plantsInGarden, plantMacros, gardenAnalysis, currentSession } = useSelector(state => state.garden);
+
+  const rangePattern = /^(\d+(\.\d+)?)-(\d+(\.\d+)?)$/;
+
+  const validate = (input) => {
+    let tempErrors = {};
+    let pData = input || plantData;
+    if(input){
+      Object.keys(pData).forEach(key => {
+  
+      if (key !== "Usage Notes" && pData[key] && typeof pData[key] === "string" &&  pData[key].includes('-')) {
+        const match = pData[key].match(rangePattern);
+        console.log(match)
+        if (!match || parseFloat(match[1]) >= parseFloat(match[3])) {
+          tempErrors[key] = "Invalid range. Expected format: X.X-Y.Y with X.X < Y.Y";
+        }
+      }
+      });
+      setErrors(tempErrors);
+      console.log(tempErrors);
+      return Object.keys(tempErrors).length === 0;
+    }
+    return Object.keys(errors).length === 0;
+  };
+  useEffect(() => {
+    setYieldStructure({
+      harvestUnit: "",
+      peakYield: "",
+      peakYieldEnd: "",
+      peakYieldStart: "",
+      timeUnit: "",
+      yieldEnd: "",
+      yieldStart: "",
+      anYieldUnit: "",
+      anYieldStart: "",
+      anYieldEnd: ""
+    });
+    setShowYieldStructure(false);
+    setPlantData({
+      "Crop Type": "",
+      "Crown Spread (m)": "",
+      "Latin": "",
+      "Lifespan": "",
+      "Max Height": "",
+      "Cultivar": "",
+      "Name": "",
+      "Perm Role": "",
+      "Root Depth (m)": "",
+      "Root System": "",
+      "Source": "",
+      "Usage Notes": "",
+      "Variety|Rootstock": ""
+    });
+
+  }, [])
+
+  const handleChange = (event) => {
+    // console.log(event);
+    setPlantData({ ...plantData, [event.target.name]: event.target.value });
+  };
+
+  const handleChangeRange = (event) => {
+    console.log(event.target.value);
+    if(typeof event.target.value === "string" && event.target.value.includes("-")){
+
+    }else if(isNaN(parseFloat(event.target.value))) {
+      return
+    }else {
+      setPlantData({ ...plantData, [event.target.name]: parseFloat(event.target.value) });
+      validate({ ...plantData, [event.target.name]: parseFloat(event.target.value) });
+      return
+    }
+    setPlantData({ ...plantData, [event.target.name]: event.target.value });
+    validate({ ...plantData, [event.target.name]: event.target.value });
+  };
+  const handleCheckboxChange = (event) => {
+    setShowYieldStructure(event.target.checked);
+    if (!event.target.checked) {
+      setYieldStructure({
+        harvestUnit: "",
+        peakYield: "",
+        peakYieldEnd: "",
+        peakYieldStart: "",
+        timeUnit: "",
+        yieldEnd: "",
+        yieldStart: "",
+        anYieldUnit: "",
+        anYieldStart: "",
+        anYieldEnd: ""
+      });
+    }
+  };
+
+  const handleSubmit = async() => {
+    if (validate()) {
+      let data = {...plantData, "Yield Structure": null }
+      if(showYieldStructure){
+        data["Yield Structure"] = {...yieldStructure};
+      }
+      var config = {
+        method: 'post',
+        url: 'https://ytwwg98ey8.execute-api.ca-central-1.amazonaws.com/prod/v1/anon/feedback/plant',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        data: { plant: data},
+        // params: {consume: true}
+      };
+    
+      let sendPlantFeedbackRequest = await axios(config) 
+      console.log(sendPlantFeedbackRequest);
+      handleClose();
+    } else {
+      console.log('Validation errors', errors);
+    }
+  }
+  
+  const handleYieldStructureChange = (event) => {
+    setYieldStructure({ ...yieldStructure, [event.target.name]: event.target.value });
+  };
+
+
+  const isValidInput = (value, unit) => {
+    if (!value) return true; // Empty values are always valid
+
+    const num = parseInt(value, 10);
+    if (isNaN(num) || num < 1) return false;
+
+    switch (unit) {
+      case 'd': return num <= 365;
+      case 'w': return num <= 52;
+      case 'm': return num <= 12;
+      case 'y': return num > 0 && Math.floor(num) === num; // No floats for 'y'
+      default: return false;
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose}>
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        height: '80%',
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        overflowY: 'scroll',
+      }}>
+        <Typography variant="h6" component="h2"> 
+        Submit Plant for Consideration (* Required)
+      </Typography>
+      
+
+      <FormControl>
+        <InputLabel>{"Crop Nutrient Uptake *" }</InputLabel>
+        <Select value={plantData["Crop Type"]} label="Crop Type *"  name="Crop Type" onChange={handleChange}>
+          {Object.keys(plantMacros?.plantMacroRequirements).map((item, index) => {
+            let val = plantMacros?.plantMacroRequirements[item];
+            let unit = plantMacros?.plantMacroRequirements[item].Unit;
+            return (
+              <MenuItem value={item}>{`${item}: N:${val.nReq}${unit} P:${val.kReq}${unit}`}</MenuItem>
+            )
+          })}
+        </Select>
+      </FormControl>
+
+
+        <TextField label="Crown Spread (m) *" name="Crown Spread (m)" onChange={handleChangeRange} value={plantData["Crown Spread (m)"]} error={!!errors["Crown Spread (m)"]} helperText={errors["Crown Spread (m)"]} />
+        
+        <TextField label="Latin *" name="Latin" onChange={handleChange} value={plantData["Latin"]} error={!!errors["Latin"]} helperText={errors["Latin"]} />
+{/* TODO: Change From Text field into Select allow for Annual, Perennial, Other (lifespan input) */}
+        <TextField label="Lifespan *" name="Lifespan" onChange={handleChangeRange} value={plantData["Lifespan"]} error={!!errors["Lifespan"]} helperText={errors["Lifespan"]} />
+
+        <TextField label="Max Height (m) *" name="Max Height" onChange={handleChangeRange} value={plantData["Max Height"]} error={!!errors["Max Height"]} helperText={errors["Max Height"]} />
+
+        <TextField label="Cultivar" name="Cultivar" onChange={handleChange} value={plantData["Cultivar"]} error={!!errors["Cultivar"]} helperText={errors["Cultivar"]} />
+
+        <TextField label="Name *" name="Name" onChange={handleChange} value={plantData["Name"]} error={!!errors["Name"]} helperText={errors["Name"]} />
+
+        <FormControl>
+          <InputLabel>{"Perm Role *" }</InputLabel>
+          <Select
+              multiple
+              label="Perm Role *" 
+              name="Perm Role"
+              errors={!!errors["Perm Role"]} 
+              value={plantData["Perm Role"] || []}
+              onChange={handleChange}
+              input={<OutlinedInput label="Perm Role *" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} />
+                  ))}
+                </Box>
+              )}
+          >
+            <MenuItem value="Other">
+              Other
+            </MenuItem>
+            {permRoles.map((role) => (
+              <MenuItem key={role} value={role}>
+                {role}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {plantData["Perm Role"] && plantData["Perm Role"]?.find(item => item.includes("Other")) && <TextField label="Perm Role *" name="Perm Role" onChange={(e)=>{
+          let val = e.target.value;
+          let index = plantData["Perm Role"].findIndex(item => item.includes("Other"))
+          let roles = plantData["Perm Role"];
+          roles[index] = `Other${val.length > 0 ? ":" : ""}${val}`
+          setPlantData({ ...plantData, ["Perm Role"]: roles });
+        }} error={!!errors["Perm Role"]} helperText={errors["Perm Role"]} />}
+
+        <FormControl>
+          <InputLabel>{"Root System *" }</InputLabel>
+          <Select
+              label="Root System *" 
+              name="Root System"
+              error={!!errors["Root System"]} 
+              value={plantData["Root System"]}
+              onChange={handleChange}
+              // input={<OutlinedInput label="Root System *" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                <Chip key={selected} label={selected} />
+                </Box>
+              )}
+          >
+            {["Fibrous","Deep Taproot", "Rhizomatous", "Tuber", "Fibrous Taproot", "Taproot"].map((role) => (
+              <MenuItem key={role} value={role}>
+                {role}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+
+        <TextField label="Source" name="Source" onChange={handleChange} value={plantData["Source"]} error={!!errors["Source"]} helperText={errors["Source"]} />
+
+        <TextField label="Usage Notes" name="Usage Notes" onChange={handleChange} value={plantData["Usage Notes"]} error={!!errors["Usage Notes"]} helperText={errors["Usage Notes"]} />
+        <TextField label="Other Notes" name="Other Notes" onChange={handleChange} value={plantData["Other Notes"]} error={!!errors["Other Notes"]} helperText={errors["Other Notes"]} />
+
+        <TextField label="Rootstock" name="Variety|Rootstock" onChange={handleChange} value={plantData["Variety|Rootstock"]} error={!!errors["Variety|Rootstock"]} helperText={errors["Variety|Rootstock"]} />
+                
+        <FormControlLabel
+          control={<Checkbox checked={showYieldStructure} onChange={handleCheckboxChange} />}
+          label="Add Yield Structure"
+        />
+        {showYieldStructure && (
+          <>
+
+            <FormControl>
+              <InputLabel>{"Harvest Vol|Weight Unit *" }</InputLabel>
+              <Select
+                  label="Harvest Unit *" 
+                  name="harvestUnit"
+                  error={!!errors["harvestUnit"]} 
+                  value={yieldStructure["harvestUnit"]}
+                  onChange={handleYieldStructureChange}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Chip key={selected} label={selected} />
+                    </Box>
+                  )}
+              >
+                {["kg","g", "cord", "bushel", "L", "piece"].map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+
+            <FormControl>
+              <InputLabel>{"Time Unit (Peak/Lifetime Yeild)*" }</InputLabel>
+              <Select
+                  label="Time Unit *" 
+                  name="timeUnit"
+                  error={!!errors["timeUnit"]} 
+                  value={yieldStructure["timeUnit"]}
+                  onChange={handleYieldStructureChange}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Chip key={selected} label={selected} />
+                    </Box>
+                  )}
+              >
+                {["d","w", "m", "y"].map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl>
+              <InputLabel>{"Annual Harvest Time Unit *" }</InputLabel>
+              <Select
+                  label="Annual Harvest Time Unit *" 
+                  name="anYieldUnit"
+                  error={!!errors["anYieldUnit"]} 
+                  value={yieldStructure["anYieldUnit"]}
+                  onChange={handleYieldStructureChange}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Chip key={selected} label={selected} />
+                    </Box>
+                  )}
+              >
+                {["d","w", "m"].map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+                        
+            {yieldStructure["harvestUnit"] && <TextField label="Peak Yield Quanity" name="peakYield" onChange={handleYieldStructureChange} value={yieldStructure.peakYield} />}
+            
+            {yieldStructure["timeUnit"] && <TextField label="Peak Yield Start" name="peakYieldStart" onChange={handleYieldStructureChange} value={yieldStructure.peakYieldStart}
+            disabled={!yieldStructure.timeUnit}
+            error={!isValidInput(yieldStructure.peakYieldStart, yieldStructure.timeUnit)}
+            helperText={!isValidInput(yieldStructure.peakYieldStart, yieldStructure.timeUnit) ? "Invalid input based on time unit" : ""}
+            />}
+            
+            
+            
+            {yieldStructure["timeUnit"] &&<TextField label="Peak Yield End" name="peakYieldEnd" onChange={handleYieldStructureChange} value={yieldStructure.peakYieldEnd}
+            disabled={!yieldStructure.timeUnit}
+            error={!isValidInput(yieldStructure.peakYieldEnd, yieldStructure.timeUnit)}
+            helperText={!isValidInput(yieldStructure.peakYieldEnd, yieldStructure.timeUnit) ? "Invalid input based on time unit" : ""}
+            />}
+            {yieldStructure["timeUnit"] && <TextField label="LifeTime Yield Start" name="yieldStart" onChange={handleYieldStructureChange} value={yieldStructure.yieldStart}
+            disabled={!yieldStructure.timeUnit}
+            error={!isValidInput(yieldStructure.yieldStart, yieldStructure.timeUnit)}
+            helperText={!isValidInput(yieldStructure.yieldStart, yieldStructure.timeUnit) ? "Invalid input based on time unit" : ""}
+            />}
+            
+            {yieldStructure["timeUnit"] && <TextField label="LifeTime Yield Yield End" name="yieldEnd" onChange={handleYieldStructureChange} value={yieldStructure.yieldEnd}
+            disabled={!yieldStructure.timeUnit}
+            error={!isValidInput(yieldStructure.yieldEnd, yieldStructure.timeUnit)}
+            helperText={!isValidInput(yieldStructure.yieldEnd, yieldStructure.timeUnit) ? "Invalid input based on time unit" : ""}
+            />}
+            
+            {yieldStructure["anYieldUnit"] && <TextField label="Annual Harvest Yield Start" name="anYieldStart" onChange={handleYieldStructureChange} value={yieldStructure.anYieldStart}
+            disabled={!yieldStructure.anYieldUnit}
+            error={!isValidInput(yieldStructure.anYieldEnd, yieldStructure.anYieldUnit)}
+            helperText={!isValidInput(yieldStructure.anYieldEnd, yieldStructure.anYieldUnit) ? "Invalid input based on time unit" : ""}
+            />}
+            
+            {yieldStructure["anYieldUnit"] && <TextField label="Annual Harvest Yield End" name="anYieldEnd" onChange={handleYieldStructureChange} value={yieldStructure.anYieldEnd}
+            disabled={!yieldStructure.anYieldUnit}
+            error={!isValidInput(yieldStructure.anYieldEnd, yieldStructure.anYieldUnit)}
+            helperText={!isValidInput(yieldStructure.anYieldEnd, yieldStructure.anYieldUnit) ? "Invalid input based on time unit" : ""}
+          />}
+          </>
+        )}
+        <Button onClick={handleSubmit}>Submit</Button>
+      </Box>
+    </Modal>
   );
 };
