@@ -175,13 +175,15 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
             clearGarden(true)
             setTimeout(() => { clearGarden(false)}, 50)
             }}>DELETE</Button>
-          {gardenAnalysis && (gardenAnalysis.nReq.toFixed(2) !== "0.00" || gardenAnalysis.kReq.toFixed(2) !== "0.00") && <Box sx={{display: 'flex', flexDirection: 'column'}}>
-            <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g`}</Typography>  
-            <Typography>{`K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
-            
-          </Box>}
       </Box>
 
+      <Box>
+        {gardenAnalysis && (gardenAnalysis.nReq.toFixed(2) !== "0.00" || gardenAnalysis.kReq.toFixed(2) !== "0.00") && <Box>
+          <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g`}</Typography>  
+          <Typography>{`K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
+          
+        </Box>}
+      </Box>
       <Box sx={{ paddingTop: 1}}>
         {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
         <Button onClick={() => setOpenFeedBackModal(true)}>Feedback</Button>
