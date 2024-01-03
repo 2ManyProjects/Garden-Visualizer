@@ -110,30 +110,109 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
 
 
   const handleZoom = useCallback((delta) => {
-    const scaleFactor = (delta > 0 ? 1.1 : 1 / 1.1);
   
     setScale(prevScale => {
-      const newScale = Math.max(prevScale * scaleFactor, 0.1);
+      let scaleFactor = (delta > 0 ? 1 : -1) * 0.1; //(delta > 0 ? 1.1 : 1 / 1.1);
   
+      if(prevScale < 0.4){
+        scaleFactor /= 10;
+      }
+      const newScale = prevScale + scaleFactor; // Math.max(prevScale + scaleFactor, 0.1);
+      // console.log(scaleFactor, prevScale, newScale, parseInt(newScale.toFixed(3)))
       // Assuming you have a state or a ref for your SVG's current viewBox
-      const { x, y, width, height } = viewBox; 
+      // const { x, y, width, height } = viewBox; 
   
-      // Calculate the new width and height based on the scale
-      const newWidth = width / scaleFactor;
-      const newHeight = height / scaleFactor;
-  
+      // // Calculate the new width and height based on the scale
+      // const newWidth = 1000 / newScale;
+      // const newHeight = 1000 / newScale;
+      // console.log(newWidth, newHeight);
       // Calculate the new x and y to keep the center the same
-      const centerX = x + width / 2;
-      const centerY = y + height / 2;
-      const newX = centerX - newWidth / 2;
-      const newY = centerY - newHeight / 2;
+      // const centerX = x + newWidth / 2;
+      // const centerY = y + newHeight / 2;
+      // const newX = centerX - newWidth / 2;
+      // const newY = centerY - newHeight / 2;
   
       // Update the viewBox state or ref here
-      setViewBox({ x: newX, y: newY, width: newWidth, height: newHeight });
+      // svgRef.current.setAttribute('viewBox', `${0} ${0} ${width / newScale} ${width / newScale}`);
+      //x: newX, y: newY,
+      // setViewBox({...viewBox, width: newWidth, height: newHeight });
   
-      return newScale.toFixed(3);
+      return parseFloat(newScale.toFixed(5));
     });
   }, [setScale, viewBox, setViewBox]);
+
+  const renderGridLines = (gridLines) => {
+    return gridLines.map((line, index) => (
+      <line
+        key={index}
+        x1={line.x1}
+        y1={line.y1}
+        x2={line.x2}
+        y2={line.y2}
+        stroke="lightgray"
+        strokeWidth="0.5"
+      />
+    ));
+  };
+
+  
+  function calculateGridLines(vB) {
+    // Define intervals for primary and secondary lines based on the scale
+    let primaryInterval, secondaryInterval;
+
+    if (scale < 1) {
+      // Find the power of 2 for scales less than 1
+      let power = 0;
+      while (1 / Math.pow(2, power) > scale) {
+        power++;
+      }
+      primaryInterval = 10 * pixelsPerMeter * Math.pow(2, power - 1); // 10m at 1/(2^power)
+      secondaryInterval = 1 * pixelsPerMeter * Math.pow(2, power - 1); // 1m at 1/(2^power)
+    } else {
+      // For scales of 1 and above, the interval decreases as the scale increases
+      // Find the nearest power of 2 that is less than or equal to the scale
+      const power = Math.floor(Math.log2(scale));
+      primaryInterval = 10 * pixelsPerMeter / Math.pow(2, power); // 10m interval at scale 1
+      secondaryInterval = 1 * pixelsPerMeter / Math.pow(2, power); // 1m interval at scale 1
+    }
+  
+
+    // const primaryInterval = 10 * pixelsPerMeter// * scale; // 10m interval at scale 1
+    // const secondaryInterval = pixelsPerMeter// * scale; // 1m interval at scale 1
+    let viewBox ={...vB};
+    // viewBox.height *= Math.PI;
+    // Calculate the start and end points for the lines based on the viewBox
+    let startX = (Math.floor((viewBox.x) / scale / primaryInterval) * primaryInterval);
+    // startX -= 0.25 * startX;
+    const endX = (Math.ceil((viewBox.x + viewBox.width) / scale / primaryInterval) * primaryInterval) * 1.25;
+    const startY = (Math.floor(viewBox.y / scale / primaryInterval) * primaryInterval);
+    const endY = (Math.ceil((viewBox.y + viewBox.height) / scale / primaryInterval) * primaryInterval) * 1.25;
+  // console.log(startX,endX, startY, endY);
+    const primaryLines = [];
+    const secondaryLines = [];
+  
+    // Generate primary grid lines within the viewBox
+    for (let x = startX; x <= endX; x += primaryInterval) {
+      primaryLines.push({ x1: x, y1: viewBox.y / scale, x2: x, y2: (viewBox.y + viewBox.height) / scale });
+    }
+    for (let y = startY; y <= endY; y += primaryInterval) {
+      primaryLines.push({ x1: viewBox.x / scale - (viewBox.width * 0.25), y1: y, x2: viewBox.x / scale + (viewBox.width * 1.25) / scale, y2: y });
+    }
+  
+    // Generate secondary grid lines within the primary intervals
+    for (let x = startX; x <= endX; x += secondaryInterval) {
+      if (x % primaryInterval !== 0) { // Skip primary line positions
+        secondaryLines.push({ x1: x, y1: viewBox.y / scale, x2: x, y2: (viewBox.y + viewBox.height) / scale });
+      }
+    }
+    for (let y = startY; y <= endY; y += secondaryInterval) {
+      if (y % primaryInterval !== 0) { // Skip primary line positions
+        secondaryLines.push({ x1: viewBox.x / scale - (viewBox.width * 0.25), y1: y, x2: viewBox.x / scale + (viewBox.width * 1.25) / scale, y2: y });
+      }
+    }
+  
+    return { primaryLines, secondaryLines };
+  }
 
   const handleKeyPress = useCallback((e) => {
     let newX = parseFloat(svgRef.current.viewBox.baseVal.x);
@@ -157,7 +236,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
     }
 
     // Update the viewBox state to re-render the SVG
-    setViewBox({ ...viewBox, x: newX, y: newY });
+    // setViewBox({ ...viewBox, x: newX, y: newY });
   }, [handleZoom, mousePosition, viewBox]);
 
   useEffect(() => {
@@ -692,12 +771,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
           y: startViewBox.y - dy,
           width: startViewBox.width,
           height: startViewBox.height
-        });
-        // setViewBox({
-        //   ...viewBox,
-        //   x: startPan.x - e.clientX,
-        //   y: startPan.y - e.clientY
-        // });
+        }); 
       }
       let svg = svgRef.current;
       let pt = svg.createSVGPoint();
@@ -1024,8 +1098,24 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
 
   // 10 px per m , 10x 10 per m2 
   const areaInDesiredUnit = (areaInPixels / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]); // Squared for area
-
-
+  const { primaryLines, secondaryLines } = calculateGridLines(viewBox);
+  function calculateStrokeWidth(scale) {
+    if (scale === 1) {
+        return 2; // Base stroke width at scale 1
+    } else if (scale > 1) {
+        // For scales greater than 1, divide stroke width by nearest power of 2
+        const power = Math.floor(Math.log2(scale));
+        return 2 / Math.pow(2, power);
+    } else {
+        // For scales less than 1, multiply stroke width by nearest power of 2
+        let power = 0;
+        while (1 / Math.pow(2, power) > scale) {
+            power++;
+        }
+        return 2 * Math.pow(2, power - 1);
+    }
+}
+  
   return (
     <div style={{ position: 'relative', height: '100%'  }}onContextMenu={handleContextMenu}>
       <div style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', height: '100%'  }}>
@@ -1108,8 +1198,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       </div>
       <svg
         ref={svgRef}
-        width="99vw"
-        height="90vh"
+        width="100%"
+        height="100%"
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
         style={{ border: '1px solid black', cursor: /*isEditing ? 'crosshair' : */'default', backgroundColor: 'rgba(127, 127, 127, 0.5)' }}
         onClick={handleSvgClick}
@@ -1117,7 +1207,14 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         onMouseUp={handleMouseUp}
         onMouseDown={handleMouseDown}
       >
+        
       <g transform={`scale(${scale})`}>
+      {primaryLines.map((line, index) => (
+        <line key={`primary-${index}`} {...line} stroke="black" strokeWidth={calculateStrokeWidth(scale)/ 2} />
+      ))}
+      {secondaryLines.map((line, index) => (
+        <line key={`secondary-${index}`} {...line} stroke="gray" strokeWidth={calculateStrokeWidth(scale) / 4}/>
+      ))}
 
         {points.length > 0 && (
           <polygon points={points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: 'limegreen', stroke: 'green', strokeWidth: 1 }} />
