@@ -126,9 +126,13 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
     setIsEditing(!isEditing);
     setEditing(!isEditing);
   };
+  /*
+
+    <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: 2, backgroundColor: isVisible ? '#fff' : 'rgba(0,0,0,0)', borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  */
 
   return (
-  <Toolbar>
+  <Toolbar sx={{position: 'fixed', top: 0, left: 0, right: 0, padding: 2, zIndex: 50, backgroundColor: '#fff'}}>
     <Box sx={{display: 'flex', maxHeight: 50, flexDirection: 'row', justifyContent: 'space-between', width: "100%"}}>
       <Box>
         <Box sx={{display: 'flex', flexDirection: 'column'}}>

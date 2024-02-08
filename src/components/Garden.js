@@ -4,15 +4,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
 import { setAllPlantData, setCurrentSession, setPlantsInGarden } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
-import { Typography, Box, Modal, Button, Select, MenuItem, Dialog, DialogTitle } from '@mui/material';
+import { Typography, Box, Modal, IconButton, Button, Select, MenuItem, Dialog, DialogTitle, Grid } from '@mui/material';
 import SunCalc from 'suncalc'
 import mapboxgl from 'mapbox-gl';
 import {MapModal} from './EnvironmentalDataModal'
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Map, {Source, Layer} from 'react-map-gl';
+import Slider from '@mui/material/Slider';
+import MeasurementList from './MeasurementList';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 
-    
 let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 const conversionFactors = {
   cm: parseFloat((1/ 0.01).toFixed(5)), // centimeters to meters
@@ -25,7 +28,7 @@ const conversionFactors = {
 };
 const pixelsPerMeter = 10;
 var map = null;
-const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal }) => {
+const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setGlobalScale }) => {
   const dispatch = useDispatch();
   const [modalData, setmodalData] = useState({
     type: null,
@@ -44,7 +47,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   const [startViewBox, setStartViewBox] = useState({ x: 0, y: 0, width: 100, height: 100 }); // Default values
   
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
+  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: window.innerHeight * 0.81 });
   const [scale, setScale] = useState(1);
 
   const [showShadows, setShowShadows] = useState(true);
@@ -117,26 +120,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       if(prevScale < 0.4){
         scaleFactor /= 10;
       }
-      const newScale = prevScale + scaleFactor; // Math.max(prevScale + scaleFactor, 0.1);
-      // console.log(scaleFactor, prevScale, newScale, parseInt(newScale.toFixed(3)))
-      // Assuming you have a state or a ref for your SVG's current viewBox
-      // const { x, y, width, height } = viewBox; 
-  
-      // // Calculate the new width and height based on the scale
-      // const newWidth = 1000 / newScale;
-      // const newHeight = 1000 / newScale;
-      // console.log(newWidth, newHeight);
-      // Calculate the new x and y to keep the center the same
-      // const centerX = x + newWidth / 2;
-      // const centerY = y + newHeight / 2;
-      // const newX = centerX - newWidth / 2;
-      // const newY = centerY - newHeight / 2;
-  
-      // Update the viewBox state or ref here
-      // svgRef.current.setAttribute('viewBox', `${0} ${0} ${width / newScale} ${width / newScale}`);
-      //x: newX, y: newY,
-      // setViewBox({...viewBox, width: newWidth, height: newHeight });
-  
+      const newScale = prevScale + scaleFactor; // Math.max(prevScale + scaleFactor, 0.1); 
+      setGlobalScale(parseFloat(newScale.toFixed(5)));
       return parseFloat(newScale.toFixed(5));
     });
   }, [setScale, viewBox, setViewBox]);
@@ -229,14 +214,12 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         case ' ': // Zoom out
           setScale(1);
           svgRef.current.setAttribute('viewBox', `${0} ${0} ${1000} ${1000}`);
-          setViewBox({ x: 0, y: 0, width: 1000, height: 1000 });
+          setViewBox({ ...viewBox, x: 0, y: 0, width: 1000  });
           break;
       default:
         return; // Ignore other keys
     }
-
-    // Update the viewBox state to re-render the SVG
-    // setViewBox({ ...viewBox, x: newX, y: newY });
+ 
   }, [handleZoom, mousePosition, viewBox]);
 
   useEffect(() => {
@@ -685,6 +668,26 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   const handleContextMenu = (e) => {
     e.preventDefault();
   };
+
+  const handleMeasurementWidget = (index, e, type, selMeasure = false) => {
+    // console.log(index, e, type, selMeasure)
+    if(type === "center"){
+
+      let measurement = selectedMeasurement;
+      measurement.selectedWidget = "centerMove"
+      setSelectedMeasurement(measurement);
+      // console.log(measurement);
+      setMeasurementList(list => list.map(item => {
+          if(item.id === measurement.id){
+              return measurement;
+          }else {
+              return item;
+          }
+
+      }))
+    }
+  }
+
   const handlePointMouseDown = (index, e, type, measurement = false, listIndex) => {
     e?.preventDefault();
     // e?.stopPropagation();
@@ -767,10 +770,10 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         const dx = (e.clientX - startPan.x) * (viewBox.width / window.innerWidth);
         const dy = (e.clientY - startPan.y) * (viewBox.height / window.innerHeight);
         setViewBox({
+          ...viewBox,
           x: startViewBox.x - dx,
           y: startViewBox.y - dy,
           width: startViewBox.width,
-          height: startViewBox.height
         }); 
       }
       let svg = svgRef.current;
@@ -781,7 +784,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       setMousePosition({ x: svgPoint.x, y: svgPoint.y });
 
 
-      if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null){
+      if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null  && selectedMeasurement.selectedWidget !== "centerMove"){
 
         svg = e.currentTarget;
         // console.log(typeof e.currentTarget, Object.keys(e.currentTarget), e.currentTarget)
@@ -791,16 +794,68 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
         cursorpt.x /= scale;
         cursorpt.y /= scale;
-
-
         let measurement = selectedMeasurement;
-        // console.log(selectedMeasurement);
+
+
         measurement.points = measurement?.points.map((point, index) => {
           if (index === measurement.selectedPointIndex) {
             return { x: cursorpt.x, y: cursorpt.y };
           }
           return point;
         });
+        // console.log(measurement);
+        setMeasurementList(list => list.map(item => {
+            if(item.id === measurement.id){
+                return measurement;
+            }else {
+                return item;
+            }
+
+        }))
+        setSelectedMeasurement(measurement);
+        
+      }
+
+      if(selectedMeasurement && selectedMeasurement.selectedWidget === "centerMove"){
+
+        svg = e.currentTarget;
+        // console.log(typeof e.currentTarget, Object.keys(e.currentTarget), e.currentTarget)
+        pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+        cursorpt.x /= scale;
+        cursorpt.y /= scale;
+        let measurement = selectedMeasurement;
+        let centerPt = { x: 0, y: 0};
+        measurement.points.map((pt) => {
+            centerPt.x += pt.x;
+            centerPt.y += pt.y;
+            return pt
+        })
+        centerPt.x /= measurement.points.length;
+        centerPt.y /= measurement.points.length;
+        if(!measurement.initOffset){
+          measurement.initOffset = {
+            x: cursorpt.x,
+            y: cursorpt.y,
+          }
+        }
+        
+        const offsetX = cursorpt.x - selectedMeasurement.initOffset.x;
+        const offsetY = cursorpt.y - selectedMeasurement.initOffset.y;
+  
+        measurement.points = measurement?.points.map((point, index) => {
+          return { x: point.x + offsetX, y: point.y + offsetY };
+        });
+        
+
+        measurement.initOffset = {
+          x: cursorpt.x,
+          y: cursorpt.y,
+        }
+
+        
         // console.log(measurement);
         setMeasurementList(list => list.map(item => {
             if(item.id === measurement.id){
@@ -882,7 +937,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       }, 5)
     }
 
-    if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null){
+    if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null && selectedMeasurement.selectedWidget !== "centerMove" ){
       setTimeout(() => {
         let measurement = selectedMeasurement;
         if(measurement.selectedPointIndex !== null)
@@ -890,6 +945,23 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
 
 
         measurement.selectedPointIndex = null;
+        setMeasurementList(list => list.map(item => {
+            if(item.id === measurement.id){
+                return measurement;
+            }else {
+                return item;
+            }
+  
+        }))
+        setSelectedMeasurement(measurement);
+      }, 5)
+    }
+
+    if(selectedMeasurement && selectedMeasurement.selectedWidget === "centerMove" ){
+      setTimeout(() => {
+        let measurement = selectedMeasurement;
+        measurement.selectedWidget = null; 
+ 
         let list = [...measurementList];
         for(let x = 0; x < list.length; x++){
           if(list[x].id === selectedMeasurement.id){
@@ -1085,6 +1157,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   
     return crownSpreadInPixels;
   };
+
+
   const textX = 10; // Start text close to the top-left corner
   const lineHeight = 20; 
   const areaInPixels = calculatePolygonArea(points);
@@ -1092,6 +1166,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   const baseFontSize = 8; // Base font size in pixels
   const baseEdgeVertSize = 5;
   const baseStrokeSize = 2;
+  const textOffset = 180;
   let adjustedFontSize = Math.max(baseFontSize / (scale), (1/scale) * 10);
   let adjustedEdgeVertSize = Math.min(baseEdgeVertSize / (scale*scale), 20);
   let adjustedStrokeSize = baseStrokeSize / (scale);
@@ -1115,24 +1190,52 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         return 2 * Math.pow(2, power - 1);
     }
 }
+  let primaryInterval, secondaryInterval;
+
+  if (scale < 1) {
+    // Find the power of 2 for scales less than 1
+    let power = 0;
+    while (1 / Math.pow(2, power) > scale) {
+      power++;
+    }
+    primaryInterval = 10 * pixelsPerMeter * Math.pow(2, power - 1); // 10m at 1/(2^power)
+    secondaryInterval = 1 * pixelsPerMeter * Math.pow(2, power - 1); // 1m at 1/(2^power)
+  } else {
+    // For scales of 1 and above, the interval decreases as the scale increases
+    // Find the nearest power of 2 that is less than or equal to the scale
+    const power = Math.floor(Math.log2(scale));
+    primaryInterval = 10 * pixelsPerMeter / Math.pow(2, power); // 10m interval at scale 1
+    secondaryInterval = 1 * pixelsPerMeter / Math.pow(2, power); // 1m interval at scale 1
   
+  }
+  if(primaryInterval > 0)
+    primaryInterval /= 10;
+
+  if(secondaryInterval > 0)
+    secondaryInterval /= 10;
+  const tickStyle = {
+    height: '10px',
+    borderLeft: '1px solid black',
+    marginBottom: '4px',
+  }; 
   return (
     <div style={{ position: 'relative', height: '100%'  }}onContextMenu={handleContextMenu}>
       <div style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', height: '100%'  }}>
         <svg width="100%" height="120" style={{ overflow: 'visible' }}>
-          <text x={textX} y={lineHeight} fontWeight="bold">
+
+          <text x={textX} y={textOffset + lineHeight} fontWeight="bold">
             {`W x L: ${(calculateGardenDimensions(points).width * conversionFactors[gardenDimensions.unit]).toFixed(2)}${gardenDimensions.unit || ""} X ${(calculateGardenDimensions(points).length * conversionFactors[gardenDimensions.unit]).toFixed(2)}${gardenDimensions.unit || ""}`}
           </text>
-          <text x={textX} y={lineHeight * 2} fontWeight="bold">
+          <text x={textX} y={textOffset + lineHeight * 2} fontWeight="bold">
             {`X, Y: ${mousePosition.x.toFixed(2)}, ${mousePosition.y.toFixed(2)}`}
           </text>
-          <text x={textX} y={lineHeight * 3} fontWeight="bold">
+          <text x={textX} y={textOffset + lineHeight * 3} fontWeight="bold">
             {`Scale: ${scale}`}
           </text>
-          <text x={textX} y={lineHeight * 4} fontWeight="bold">
+          <text x={textX} y={textOffset + lineHeight * 4} fontWeight="bold">
             {`# Plants: ${plantsInGarden.length}`}
           </text>
-          <text x={textX} y={lineHeight * 5} fontWeight="bold">
+          <text x={textX} y={textOffset + lineHeight * 5} fontWeight="bold">
             {`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`}
           </text>
 
@@ -1178,21 +1281,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
             </Map>
             {/* <div id="map-container"  /> */}
           </Modal>
-          {/* <text x={textX} y={lineHeight * 6} fontWeight="bold">
-            {`fontSize: ${adjustedFontSize.toFixed(2)}`}
-          </text>
-          <text x={textX} y={lineHeight * 7} fontWeight="bold">
-            {`vertSize: ${adjustedEdgeVertSize.toFixed(2)}`}
-          </text> */}
-          {/* <text x={textX} y={lineHeight * 10} fontWeight="bold">
-            {`selectedPointIndex: ${selectedPointIndex}`}
-          </text>
-          <text x={textX} y={lineHeight * 11} fontWeight="bold">
-            {`selectedPlantIndex: ${selectedPlantIndex}`}
-          </text>
-          <text x={textX} y={lineHeight * 12} fontWeight="bold">
-            {`lastSelectedPointIndex: ${lastSelectedPointIndex}`}
-          </text> */}
+          
           
         </svg>
       </div>
@@ -1201,7 +1290,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         width="100%"
         height="100%"
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-        style={{ border: '1px solid black', cursor: /*isEditing ? 'crosshair' : */'default', backgroundColor: 'rgba(127, 127, 127, 0.5)' }}
+        style={{ border: '1px solid black', cursor: /*isEditing ? 'crosshair' : */'default', backgroundColor: 'rgba(127, 127, 127, 0.5)',  }}
         onClick={handleSvgClick}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -1209,12 +1298,6 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       >
         
       <g transform={`scale(${scale})`}>
-      {primaryLines.map((line, index) => (
-        <line key={`primary-${index}`} {...line} stroke="black" strokeWidth={calculateStrokeWidth(scale)/ 2} />
-      ))}
-      {secondaryLines.map((line, index) => (
-        <line key={`secondary-${index}`} {...line} stroke="gray" strokeWidth={calculateStrokeWidth(scale) / 4}/>
-      ))}
 
         {points.length > 0 && (
           <polygon points={points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: 'limegreen', stroke: 'green', strokeWidth: 1 }} />
@@ -1259,61 +1342,30 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
             y2={points[lastSelectedPointIndex !== 0 ? lastSelectedPointIndex - 1 : points.length - 1].y}
             style={{ stroke: 'yellow', strokeWidth: adjustedStrokeSize }}
           />
-        )}
-        {measurementList?.map((item, listIndex) => {
-          let isSelected = item.id === selectedMeasurement?.id
-          return(
-            <React.Fragment key={listIndex}>
-
-              {item.points.length > 0 && (
-                <polygon points={item.points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: isSelected ? 'rgba(255, 255, 53, 0.3)' : 'rgba(53, 81, 92, 0.3)', stroke: 'blue', strokeWidth: 1 }} />
-              )}
-              {isSelected && item.points.length > 0 && item.points.map((point, index) => (
-                <circle
-                  key={index}
-                  cx={point.x}
-                  cy={point.y}
-                  zIndex={100}
-                  r={adjustedEdgeVertSize}
-                  fill={index === item.lastSelectedPointIndex ? "rgba(127, 0, 0, 0.5)" : "rgba(0, 0, 127, 0.5)"}
-                  stroke="blue"
-                  strokeWidth={adjustedStrokeSize}
-                  onMouseDown={(e) => handlePointMouseDown(index, e, "edge", true, listIndex)}
-                  // onDoubleClick={() => handlePointDoubleClick(index)}
-                  style={{ cursor: 'pointer' }}
-                />
-              ))}
-              {isSelected && item.points.length > 0 && item.points.map((point, index) => {
-                const nextPoint = item.points[index + 1] || item.points[0];  
-                const distance = (calculateDistance(point, nextPoint).toFixed(2) * conversionFactors[gardenDimensions.unit]).toFixed(1); // Adjust decimal places as needed
-
-                // Calculate midpoint for text placement
-                const midX = (point.x + nextPoint.x) / 2;
-                const midY = (point.y + nextPoint.y) / 2;
-
-                return (
-                  <g key={index}>
-                    <line x1={point.x} y1={point.y} x2={nextPoint.x} y2={nextPoint.y}/>
-                    <text x={midX} y={midY} style={{ fontSize: `${adjustedFontSize}px` }}>
-                      {distance}
-                    </text>
-                  </g>
-                );
-              })}
-              {item.lastSelectedPointIndex != null  && item.lastSelectedPointIndex < item.points.length && (
-                <line
-                  x1={item.points[item.lastSelectedPointIndex].x}
-                  y1={item.points[item.lastSelectedPointIndex].y}
-                  x2={item.points[item.lastSelectedPointIndex !== 0 ? item.lastSelectedPointIndex - 1 : item.points.length - 1].x}
-                  y2={item.points[item.lastSelectedPointIndex !== 0 ? item.lastSelectedPointIndex - 1 : item.points.length - 1].y}
-                  style={{ stroke: 'yellow', strokeWidth: adjustedStrokeSize }}
-                />
-              )}
-            </React.Fragment >
-          )
-        })}
+        )} 
+        <MeasurementList 
+        measurementList={measurementList}
+        adjustedEdgeVertSize={adjustedEdgeVertSize}
+        adjustedStrokeSize={adjustedStrokeSize}
+        handlePointMouseDown={handlePointMouseDown}
+        selectedMeasurement={selectedMeasurement}
+        conversionFactors={conversionFactors}
+        gardenDimensions={gardenDimensions}
+        calculateDistance={calculateDistance}
+        adjustedFontSize={adjustedFontSize}
+        widgetWidth={secondaryLines.length > 0 ? Math.abs(secondaryLines[0].x1 - secondaryLines[1].x1) : 0}
+        handleMeasurementWidget={handleMeasurementWidget}
+        />
+        
         {useMemo(() => renderPlants(), [plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
         {/* {renderPlants()} */}
+
+        {primaryLines.map((line, index) => (
+          <line key={`primary-${index}`} style ={{opacity: '25%'}} {...line} stroke="black" strokeWidth={calculateStrokeWidth(scale)/ 2} />
+        ))}
+        {secondaryLines.map((line, index) => (
+          <line key={`secondary-${index}`} style ={{opacity: '25%'}} {...line} stroke="gray" strokeWidth={calculateStrokeWidth(scale) / 4}/>
+        ))}
         </g>
       </svg>
       <div style={{
@@ -1323,6 +1375,79 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       display: 'flex',
       justifyContent: 'center'
     }}>
+    <Box style={{ position: 'fixed', bottom: '15vh', left: 0, right: 0, height: '8vh', width: '20vh' }}>
+      <Box style={{display: 'flex', flexDirection: 'column', width: '3vw'}}>
+        <IconButton style={{backgroundColor: '#8df48b', border: '1px solid #000'}} onClick={() => handleZoom(1)} color="success">
+          <ZoomInIcon />
+        </IconButton>
+        <IconButton style={{backgroundColor: '#8df48b', border: '1px solid #000'}} onClick={() => handleZoom(-1)}  color="secondary">
+          <ZoomOutIcon />
+        </IconButton>
+
+      </Box>
+      <Box style={{backgroundColor: '#fff', border: '1px solid #000'}}>
+        <Box style={{width: '100%',justifyContent: 'space-between', display: 'flex'}}>
+          <Typography variant="caption" >
+            {`0m`}
+          </Typography> 
+          <Typography variant="caption"  >
+          {`${secondaryInterval * 5}m`}
+          </Typography> 
+          <Typography variant="caption"  >
+          {`${primaryInterval}m`}
+          </Typography> 
+        </Box>
+        <Box sx={{ height: '2px', backgroundColor: 'black', width: '100%' }} />
+
+          <Box style={{width: '100%',justifyContent: 'space-between', display: 'flex'}}>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ ...tickStyle, borderLeft: '4px solid black', height: '20px', position: 'absolute', left: 0 }} />
+              </Box>
+
+              
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+
+
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+
+
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ ...tickStyle}} />
+              </Box>
+
+
+              <Box item xs={4} sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                <Box sx={{ ...tickStyle, borderLeft: '4px solid black', height: '20px', position: 'absolute', right: 0 }} />
+                {/* <Typography variant="caption" sx={{ ...labelStyle, position: 'absolute', right: 0 }}>
+                  {`${primaryInterval}m`}
+                </Typography> */}
+              </Box>
+
+          </Box> 
+      </Box>
+    </Box>
       <FloatingToolbar 
       setLocation={(coords) => {
         let sesh = JSON.parse(JSON.stringify(currentSession))

@@ -10,6 +10,7 @@ function App() {
   const [openPlantModal, setOpenPlantModal] = useState(false);
   const [gardenDimensions, setGardenDimensions] = useState({  unit: null });
   const [openHeightMap, setOpenHeightMap] = useState(false);
+  const [scale, setScale] = useState(1);
  
   const handleGardenDimensionsChange = (unit) => {
     setGardenDimensions({  unit });
@@ -28,7 +29,8 @@ function App() {
       setOpenPlantModal={setOpenPlantModal}
       openPlantModal={openPlantModal}
       />
-      <Garden 
+      <Garden
+      setGlobalScale={setScale}
       isEditing={isEditing} 
       clearGarden={clearGarden}
       openHeightMap={openHeightMap}
