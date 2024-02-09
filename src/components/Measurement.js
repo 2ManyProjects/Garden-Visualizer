@@ -10,7 +10,7 @@ import SendIcon from '@mui/icons-material/Send';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 
 
-const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, handleMeasurementWidget, widgetWidth }) => { 
+const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, handleMeasurementWidget, widgetWidth, setSelectedMeasurement }) => { 
     let centerPt = null;
 
     if(isSelected && item.points.length > 2){
@@ -28,7 +28,11 @@ const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjust
         <React.Fragment key={listIndex}>
 
         {item.points.length > 0 && (
-            <polygon points={item.points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: isSelected ? 'rgba(255, 255, 53, 0.3)' : 'rgba(53, 81, 92, 0.3)', stroke: 'blue', strokeWidth: 1 }} />
+            <polygon 
+            onMouseDown={(e) =>{
+                if(!isSelected)
+                setSelectedMeasurement(item)}}
+            points={item.points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: isSelected ? 'rgba(255, 255, 53, 0.3)' : item.colour.rgbString ?? 'rgba(53, 81, 92, 0.3)', stroke: 'blue', strokeWidth: 1 }} />
         )}
         {centerPt && <rect 
             x={centerPt.x - (widgetWidth / 4)} 

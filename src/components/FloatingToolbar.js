@@ -9,11 +9,14 @@ import GetAppIcon from '@mui/icons-material/Download';
 import Shade from '@mui/icons-material/WbShade';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { EnvironmentalDataModal } from './EnvironmentalDataModal';
+import { SwatchesPicker } from 'react-color'
 
 
-const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows}) => {
+const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows, setMeasurementColor}) => {
   const [isVisible, setIsVisible] = useState(false);  
   const [open, setOpen] = useState(false);
+  const [colour, setColour] = useState(null);
+  const [showColourPicker, setShowColourPicker] = useState(false);
   const [newName, setNewName] = useState('');
 
   const handleOpen = () => setOpen(true);
@@ -127,9 +130,9 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
             onChange={(e) => setSelectedMeasurement(e.target.value)}
             disabled={selectedMeasurement?.addPoints}
           >
-          <MenuItem key={-5} value={null}>
-             Deselect Measurement
-          </MenuItem>
+          {selectedMeasurement && <MenuItem key={-5} value={null}>
+             Deselect Plot
+          </MenuItem>}
             {measurementList?.map(measurement => (
               <MenuItem key={measurement.id} value={measurement}>
                 {measurement.name || measurement.id}
@@ -141,7 +144,41 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
             <>
                 <Button onClick={handleAddRemovePoints}>
                     {selectedMeasurement.addPoints ? '- Points' : '+ Points'}
-                </Button>
+                </Button> 
+
+                <Modal
+                  open={showColourPicker}
+                  onClose={()=> setShowColourPicker(false)}
+                  aria-labelledby="colour-modal"
+                  aria-describedby="colour-modal-description"
+                >
+                  <Box sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: 400,
+                      bgcolor: 'background.paper',
+                      boxShadow: 24,
+                      p: 4,
+                  }}>
+                    <SwatchesPicker onChangeComplete={(color) =>{setColour(color)}}/>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                      <Button onClick={()=> {
+                          setColour(null);
+                          setMeasurementColor(null);
+                          setShowColourPicker(false);
+                        }}>Cancel</Button>
+                      <Button onClick={()=> {
+                          setMeasurementColor(colour);
+                          setShowColourPicker(false);
+                        }} sx={{ ml: 1 }}>Confirm</Button>
+                    </Box>
+                  </Box>
+                </Modal>
+
+
+                <Button onClick={()=> setShowColourPicker(true)}>Set Colour</Button>
                 <Button onClick={handleClearMeasurement}>Clear</Button>
                 <Button onClick={handleDeleteMeasurement}>Delete</Button>
                 <Button onClick={handleOpen}> Rename</Button>
@@ -154,7 +191,7 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
           </Box>
           {!selectedMeasurement && (
             <>
-              <Button onClick={handleAddMeasurement}>Add Measurement</Button>
+              <Button onClick={handleAddMeasurement}>Add Plot</Button>
             </>
           )}
         </>

@@ -908,6 +908,21 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
     [selectedPointIndex, selectedPlantIndex, points, scale, selectedMeasurement, plantsInGarden, viewBox, isPanning, startPan]
   );
 
+
+  const setMeasurementColor = (colour) => {
+    let measurement = selectedMeasurement;
+    measurement.colour = {...colour, rgbString: `rgba( ${colour.rgb.r}, ${colour.rgb.g}, ${colour.rgb.b}, 0.5)`}
+    // console.log(measurement);
+    setMeasurementList(list => list.map(item => {
+      if(item.id === measurement.id){
+          return measurement;
+      }else {
+          return item;
+      }
+    }))
+    setSelectedMeasurement(measurement);
+  }
+
   const handleMouseUp = () => {
     if(isPanning){
 
@@ -1344,6 +1359,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
           />
         )} 
         <MeasurementList 
+        setSelectedMeasurement={setSelectedMeasurement}
         measurementList={measurementList}
         adjustedEdgeVertSize={adjustedEdgeVertSize}
         adjustedStrokeSize={adjustedStrokeSize}
@@ -1472,6 +1488,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       storeData={storeData}
       clear={clearData}
       clearPlantData={clearPlantData}
+      setMeasurementColor={setMeasurementColor}
       calcArea={()=>{
         return selectedMeasurement !== null ?  (calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]) : null
       }}

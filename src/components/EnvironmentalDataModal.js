@@ -598,7 +598,7 @@ const LineChart = () => {
           onChange={handleSelectChange}
           fullWidth
         >
-        <MenuItem key={'asdwdad'} value={null}>{`Deselect Chart`}</MenuItem>
+        {selectedOption && <MenuItem key={'asdwdad'} value={null}>Deselect Chart</MenuItem>}
           {chartConfigs?.map((option, index) => (
             <MenuItem key={index} value={option.value}>{option.label}</MenuItem>
           ))}

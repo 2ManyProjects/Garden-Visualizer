@@ -84,7 +84,7 @@ The left most button deletes your current saved session, please be careful as th
 
 To Load a saved file select the 4th button from the save menu. A modal with your saves should pop up, here you can easily import your json file from other saves. 
 
-Once your garden is saved we can start measuring out the plots. Once the bottom toolbar is visible select the Add Measurement button. Similarly to how the larger garden space was outlined, these smaller grow beds are created, they can even be named. 
+Once your garden is saved we can start measuring out the plots. Once the bottom toolbar is visible select the Add Plot button. Similarly to how the larger garden space was outlined, these smaller grow beds are created, they can even be named. 
 
 Once your done adding your various plots (or skip that if your more freeform) we can start planting. From the top toolbar select the Role your planting for, currently the availalbe roles are: 
 
