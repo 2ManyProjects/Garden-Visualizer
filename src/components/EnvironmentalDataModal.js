@@ -299,7 +299,7 @@ export function EnvironmentalDataModal({session, setLocation}) {
             {/* <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button> */}
             {(location || session?.data?.coords) && <Button disabled={fetching} variant="contained" color="primary" onClick={async() => {
               setFetching(true);
-              let data = await fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id, dispatch)
+              let data = await fetchHistoricalWeatherData(apiKey,  location?.lat || session?.data?.coords.lat, location?.lon || session?.data?.coords.lon, startDate, endDate, session.id, dispatch).catch(err => { setFetching(false)})
               setLocationData(data);
               setFetching(false);
               }}>

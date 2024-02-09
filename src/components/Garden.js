@@ -1376,7 +1376,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       justifyContent: 'center'
     }}>
     <Box style={{ position: 'fixed', bottom: '15vh', left: 0, right: 0, height: '8vh', width: '20vh' }}>
-      <Box style={{display: 'flex', flexDirection: 'column', width: '3vw'}}>
+      <Box style={{display: 'flex', flexDirection: 'column', width: 40}}>
         <IconButton style={{backgroundColor: '#8df48b', border: '1px solid #000'}} onClick={() => handleZoom(1)} color="success">
           <ZoomInIcon />
         </IconButton>
