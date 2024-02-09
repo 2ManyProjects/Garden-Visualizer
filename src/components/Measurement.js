@@ -31,7 +31,11 @@ const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjust
             <polygon 
             onMouseDown={(e) =>{
                 if(!isSelected)
-                setSelectedMeasurement(item)}}
+                    setSelectedMeasurement(item)
+                else{
+                    handleMeasurementWidget(listIndex, e, "center", item)
+                }
+            }}
             points={item.points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: isSelected ? 'rgba(255, 255, 53, 0.3)' : item.colour.rgbString ?? 'rgba(53, 81, 92, 0.3)', stroke: 'blue', strokeWidth: 1 }} />
         )}
         {centerPt && <rect 

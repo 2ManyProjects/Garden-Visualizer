@@ -674,7 +674,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
     if(type === "center"){
 
       let measurement = selectedMeasurement;
-      measurement.selectedWidget = "centerMove"
+      measurement.selectedWidget = "measurementMove"
       setSelectedMeasurement(measurement);
       // console.log(measurement);
       setMeasurementList(list => list.map(item => {
@@ -784,7 +784,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       setMousePosition({ x: svgPoint.x, y: svgPoint.y });
 
 
-      if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null  && selectedMeasurement.selectedWidget !== "centerMove"){
+      if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null  && selectedMeasurement.selectedWidget !== "measurementMove"){
 
         svg = e.currentTarget;
         // console.log(typeof e.currentTarget, Object.keys(e.currentTarget), e.currentTarget)
@@ -816,7 +816,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         
       }
 
-      if(selectedMeasurement && selectedMeasurement.selectedWidget === "centerMove"){
+      if(selectedMeasurement && selectedMeasurement.selectedWidget === "measurementMove"){
 
         svg = e.currentTarget;
         // console.log(typeof e.currentTarget, Object.keys(e.currentTarget), e.currentTarget)
@@ -848,12 +848,31 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         measurement.points = measurement?.points.map((point, index) => {
           return { x: point.x + offsetX, y: point.y + offsetY };
         });
-        
 
         measurement.initOffset = {
+          ...measurement.initOffset ,
           x: cursorpt.x,
           y: cursorpt.y,
         }
+        // if(!measurement.initOffset){
+        //     measurement.initOffset = {
+        //         offsetX: cursorpt.x - centerPt.x,
+        //         offsetY: cursorpt.y - centerPt.y,
+        //     };
+        // }
+    
+        // // Use the constant offset to calculate the new position
+        // const { offsetX, offsetY } = measurement.initOffset;
+        // measurement.points = measurement.points.map(point => ({
+        //     x: point.x + (cursorpt.x - centerPt.x - offsetX),
+        //     y: point.y + (cursorpt.y - centerPt.y - offsetY),
+        // }));
+
+        // measurement.initOffset = {
+        //   ...measurement.initOffset ,
+        //   offsetX: cursorpt.x - centerPt.x,
+        //   offsetY: cursorpt.y - centerPt.y,
+        // }
 
         
         // console.log(measurement);
@@ -952,7 +971,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       }, 5)
     }
 
-    if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null && selectedMeasurement.selectedWidget !== "centerMove" ){
+    if(selectedMeasurement && selectedMeasurement?.selectedPointIndex !== null && selectedMeasurement.selectedWidget !== "measurementMove" ){
       setTimeout(() => {
         let measurement = selectedMeasurement;
         if(measurement.selectedPointIndex !== null)
@@ -972,10 +991,11 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       }, 5)
     }
 
-    if(selectedMeasurement && selectedMeasurement.selectedWidget === "centerMove" ){
+    if(selectedMeasurement && selectedMeasurement.selectedWidget === "measurementMove" ){
       setTimeout(() => {
         let measurement = selectedMeasurement;
         measurement.selectedWidget = null; 
+        measurement.initOffset = null;
  
         let list = [...measurementList];
         for(let x = 0; x < list.length; x++){
