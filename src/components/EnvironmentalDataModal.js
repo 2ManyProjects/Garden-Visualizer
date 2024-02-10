@@ -288,10 +288,7 @@ export function EnvironmentalDataModal({session, setLocation}) {
             <Typography style={{paddingTop: 250,}} variant="h6" component="h2"> 
               {`Lat: ${((session?.data?.coords?.lat)).toFixed(7)}, Lon: ${((session?.data?.coords?.lon)).toFixed(7)}`} 
               </Typography>}
-            {location &&
-            <Typography  variant="h6" component="h2"> 
-              {`Lat: ${((location?.lat)).toFixed(7)}, Lon: ${((location?.lon)).toFixed(7)}`} 
-              </Typography>}
+              
               
             <Button variant="contained" color="primary" onClick={() => setMapModalOpen(true)}>
               Select Location

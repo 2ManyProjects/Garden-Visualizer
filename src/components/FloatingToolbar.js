@@ -117,13 +117,13 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
         <>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
 
-          <Button
+          {session?.data?.coords?.lon && <Button
               color="primary"
               startIcon={<Shade />}
               onClick={()=>{
                 setShowShadows(!showShadows)
               }}
-          />
+          />}
           {measurementList.length > 0 && <Select
             sx={{maxWidth: 100}}
             value={selectedMeasurement || ''}
