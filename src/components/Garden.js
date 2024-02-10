@@ -1023,7 +1023,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
           </clipPath>
         </defs>
         <ImageWithFallback
-          href={imageUrl}
+          imageUrl={imageUrl}
           radius={radius}
           clipPath={clipPathId}
           rotation={rotation}
@@ -1058,7 +1058,9 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         height={radius * 2}
         clipPath={`url(#${clipPathId})`}
         transform={`rotate(${rotation},${radius},${radius})`}
-        onError={() => setHasError(true)}
+        onError={(e) => {
+          // console.log("ERR", e)
+          setHasError(true)}}
         // style={{
         //   transformOrigin: transformOrigin
         // }}
