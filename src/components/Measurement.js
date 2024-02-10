@@ -36,7 +36,7 @@ const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjust
                     handleMeasurementWidget(listIndex, e, "center", item)
                 }
             }}
-            points={item.points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: isSelected ? 'rgba(255, 255, 53, 0.3)' : item.colour.rgbString ?? 'rgba(53, 81, 92, 0.3)', stroke: 'blue', strokeWidth: 1 }} />
+            points={item.points.map(p => `${p.x},${p.y}`).join(' ')} style={{ fill: isSelected ? 'rgba(255, 255, 53, 0.3)' : item?.colour?.rgbString ?? 'rgba(53, 81, 92, 0.3)', stroke: 'blue', strokeWidth: 1 }} />
         )}
         {centerPt && <rect 
             x={centerPt.x - (widgetWidth / 4)} 

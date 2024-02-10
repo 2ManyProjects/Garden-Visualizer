@@ -1011,30 +1011,61 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   };
 
   
-    function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index}) {
-      const clipPathId = `clip-circle-${Math.random().toString(36).substr(2, 9)}`;
-      const transformOrigin = `${radius}px ${radius}px`;
-    
+  function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index}) {
+    const clipPathId = `clip-circle-${Math.random().toString(36).substr(2, 9)}`;
+    const transformOrigin = `${radius}px ${radius}px`;
+  
+    return (
+      <svg width={radius * 2} height={radius * 2} x={cx - radius} y={cy - radius} visibility={(role && role.includes(selectedPermRole)) ? "visible" : "hidden"} onMouseDown={(e) => handlePointMouseDown(index, e, "plant")}>
+        <defs>
+          <clipPath id={clipPathId}>
+            <circle cx={radius} cy={radius} r={radius} />
+          </clipPath>
+        </defs>
+        <ImageWithFallback
+          href={imageUrl}
+          radius={radius}
+          clipPath={clipPathId}
+          rotation={rotation}
+          // style={{
+          //   transformOrigin: transformOrigin
+          // }}
+        />
+      </svg>
+    );
+  }
+  function ImageWithFallback({ imageUrl, radius, clipPathId, rotation }) {
+    const [hasError, setHasError] = useState(false);
+  
+    if (hasError) {
+      // Render a circle as the fallback
       return (
-        <svg width={radius * 2} height={radius * 2} x={cx - radius} y={cy - radius} visibility={(role && role.includes(selectedPermRole)) ? "visible" : "hidden"} onMouseDown={(e) => handlePointMouseDown(index, e, "plant")}>
-          <defs>
-            <clipPath id={clipPathId}>
-              <circle cx={radius} cy={radius} r={radius} />
-            </clipPath>
-          </defs>
-          <image
-            href={imageUrl}
-            width={radius * 2}
-            height={radius * 2}
-            clipPath={`url(#${clipPathId})`}
-            transform={`rotate(${rotation},${radius},${radius})`}
-            // style={{
-            //   transformOrigin: transformOrigin
-            // }}
-          />
-        </svg>
+        <circle
+          cx={radius}
+          cy={radius}
+          r={radius}
+          clipPath={`url(#${clipPathId})`}
+          transform={`rotate(${rotation},${radius},${radius})`}
+          fill="#CCCCCC" 
+        />
       );
     }
+  
+    return (
+      <image
+        href={imageUrl}
+        width={radius * 2}
+        height={radius * 2}
+        clipPath={`url(#${clipPathId})`}
+        transform={`rotate(${rotation},${radius},${radius})`}
+        onError={() => setHasError(true)}
+        // style={{
+        //   transformOrigin: transformOrigin
+        // }}
+      />
+    );
+  }
+  
 
   const renderPlants = () => {
     
@@ -1411,7 +1442,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       display: 'flex',
       justifyContent: 'center'
     }}>
-    <Box style={{ position: 'fixed', bottom: '15vh', left: 0, right: 0, height: '8vh', width: '20vh' }}>
+    {primaryLines && primaryLines.length > 0 && <Box style={{ position: 'fixed', bottom: '15vh', left: 0, right: 0, height: '8vh', width: '20vh' }}>
       <Box style={{display: 'flex', flexDirection: 'column', width: 40}}>
         <IconButton style={{backgroundColor: '#8df48b', border: '1px solid #000'}} onClick={() => handleZoom(1)} color="success">
           <ZoomInIcon />
@@ -1483,7 +1514,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
 
           </Box> 
       </Box>
-    </Box>
+    </Box>}
       <FloatingToolbar 
       setLocation={(coords) => {
         let sesh = JSON.parse(JSON.stringify(currentSession))
