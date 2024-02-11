@@ -606,7 +606,6 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         let spread = parseAndGenerateNumber(selectedPlant["Crown Spread (m)"]);
         // console.log("handleSvgClick", selectedPlant);
         const newPlant = {
-          id: `${selectedPlant.Latin}#${uuidv4()}`,
           x: cursorpt.x,
           y: cursorpt.y,
           cropType: selectedPlant["Crop Type"],
@@ -624,7 +623,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           spread: spread,
           rotation: (["Herbaceous", "Vertical", "Rhizosphere", "Ground Cover"].includes(selectedPlant["Perm Role"])) ? Math.floor(Math.random() * 30) : Math.floor(Math.random() * 180),
           path:  selectedPlant.path,
-          ...selectedPlant
+          ...selectedPlant,
+          id: `${selectedPlant.Latin}#${uuidv4()}`,
         };
       
         dispatch(setPlantsInGarden([...plantsInGarden, newPlant]))
