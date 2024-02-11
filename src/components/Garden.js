@@ -32,7 +32,7 @@ const conversionFactors = {
 };
 const pixelsPerMeter = 10;
 var map = null;
-const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setGlobalScale }) => {
+const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setGlobalScale, setAreaStr, areaStr}) => {
   const dispatch = useDispatch();
   const [modalData, setmodalData] = useState({
     type: null,
@@ -1269,6 +1269,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
 
   // 10 px per m , 10x 10 per m2 
   const areaInDesiredUnit = (areaInPixels / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]); // Squared for area
+  if(areaStr !== `Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`){
+    setAreaStr(`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`)
+  }
   const { primaryLines, secondaryLines } = calculateGridLines(viewBox);
   function calculateStrokeWidth(scale) {
     if (scale === 1) {
@@ -1636,7 +1639,10 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       <div style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', height: '100%'  }}>
         <svg width="100%" height="120" style={{ overflow: 'visible' }}>
 
-          <text x={textX} y={textOffset + lineHeight} fontWeight="bold">
+          {/* <text x={'1vw'} y={'13vh'} fontWeight="bold">
+            {`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`}
+          </text> */}
+          {/* <text x={textX} y={textOffset + lineHeight} fontWeight="bold">
             {`W x L: ${(calculateGardenDimensions(points).width * conversionFactors[gardenDimensions.unit]).toFixed(2)}${gardenDimensions.unit || ""} X ${(calculateGardenDimensions(points).length * conversionFactors[gardenDimensions.unit]).toFixed(2)}${gardenDimensions.unit || ""}`}
           </text>
           <text x={textX} y={textOffset + lineHeight * 2} fontWeight="bold">
@@ -1650,7 +1656,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           </text>
           <text x={textX} y={textOffset + lineHeight * 5} fontWeight="bold">
             {`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`}
-          </text>
+          </text> */}
 
           <Modal 
           open={openHeightMap}

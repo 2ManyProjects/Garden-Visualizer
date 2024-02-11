@@ -9,7 +9,7 @@ import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
 import Shade from '@mui/icons-material/WbShade';
 
-const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setOpenPlantModal,openPlantModal}) => {
+const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setOpenPlantModal,openPlantModal, areaStr}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const fetching = useRef(false);
@@ -135,7 +135,7 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
   return (
   <Toolbar sx={{position: 'fixed', top: 0, left: 0, right: 0, padding: 2, zIndex: 50, backgroundColor: '#fff'}}>
     <Box sx={{display: 'flex', maxHeight: 50, flexDirection: 'row', justifyContent: 'space-between', width: "100%"}}>
-      <Box sx={{display: 'flex', flexDirection: 'row'}}>
+      <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
           <Button sx={{maxHeight: 20}} onClick={() => {
             showKeys(true)
@@ -144,12 +144,16 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
         </Box>
 
         {currentSession?.data?.coords?.lon && <Button
-              color="primary"
-              startIcon={<Shade />}
-              onClick={()=>{
-                setShowShadows(!showShadows)
-              }}
-          />}
+            color="primary"
+            startIcon={<Shade />}
+            onClick={()=>{
+              setShowShadows(!showShadows)
+            }}
+        />}
+          
+        <text x={'1vw'} y={'13vh'} fontWeight="bold">
+          {areaStr}
+        </text>
       </Box>
       <Box sx={{flexDirection: 'row', justifyContent: 'center', height: '100%'}} >
         <FormControl sx={{paddingRight: 2,}}>

@@ -10,6 +10,7 @@ function App() {
   const [openPlantModal, setOpenPlantModal] = useState(false);
   const [gardenDimensions, setGardenDimensions] = useState({  unit: null });
   const [openHeightMap, setOpenHeightMap] = useState(false);
+  const [areaStr, setAreaStr] = useState(''); 
   const [scale, setScale] = useState(1);
   const [showShadows, setShowShadows] = useState(true);
  
@@ -31,6 +32,7 @@ function App() {
       openFeedBackModal={openFeedBackModal}
       setOpenPlantModal={setOpenPlantModal}
       openPlantModal={openPlantModal}
+      areaStr={areaStr}
       />
       <Garden
       showShadows={showShadows}
@@ -42,7 +44,9 @@ function App() {
       setOpenHeightMap={setOpenHeightMap}
       gardenDimensions={gardenDimensions}
       setOpenFeedBackModal={setOpenFeedBackModal}
-      openFeedBackModal={openFeedBackModal} />
+      openFeedBackModal={openFeedBackModal} 
+      areaStr={areaStr}
+      setAreaStr={setAreaStr}/>
     </div>
   );
 }
