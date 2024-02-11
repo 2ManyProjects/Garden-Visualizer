@@ -199,7 +199,7 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
       <Box>
         {gardenAnalysis && (gardenAnalysis.nReq.toFixed(2) !== "0.00" || gardenAnalysis.kReq.toFixed(2) !== "0.00") && <Box>
           <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g`}</Typography>  
-          <Typography>{`K:${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
+          <Typography>{`K: ${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
           
         </Box>}
       </Box>

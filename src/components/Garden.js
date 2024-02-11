@@ -19,6 +19,8 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import CloseIcon from '@mui/icons-material/Close';
+import useDeepCompareEffect from '../utils/useDeepCompareEffect';
+import { useLayoutEffect } from 'react';
 
 let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 const conversionFactors = {
@@ -961,9 +963,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       setTimeout(() => {
         setIsPanning(false);
       }, 5)
+    }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-    }
 
     if (selectedPlantIndex != null && plantsInGarden[selectedPlantIndex]) {
       const selPlant = plantsInGarden[selectedPlantIndex];
@@ -1101,8 +1103,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     let isLastSelected = false;
     if(lastSelectedPlant?.id === plant.id)
       isLastSelected = true;
-    
-    if(selectedPermRole && currentSession?.data?.coords && [selectedPermRole].includes(plant["Perm Role"]) && showShadows && plant.shadow !== false){
+      
+    if(selectedPermRole && currentSession?.data?.coords && plant["Perm Role"].includes(selectedPermRole) && showShadows && plant.shadow !== false){
       summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
       equinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-09-22'), plantHeight, currentSession.data.coords);
       // winterEquinoxShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-03-20'), plantHeight, currentSession.data.coords);
@@ -1111,10 +1113,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       // console.log("summerSolsticeShadowPolygon", summerSolsticeShadowPolygon);
       
     }
-    
     return (
       <React.Fragment key={index}>
-        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={[selectedPermRole].includes(plant["Perm Role"])} index={index} isLastSelected={isLastSelected}/>
+        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={plant["Perm Role"].includes(selectedPermRole)} index={index} isLastSelected={isLastSelected}/>
         {summerSolsticeShadowPolygon && (
           <polygon
             points={summerSolsticeShadowPolygon}
@@ -1326,19 +1327,75 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   }; 
 
 
-  const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement}) => {
-  function truncateString(str, num) {
-    if (str.length > num) {
-      return str.slice(0, num) + "...";
-    } else {
-      return str;
-    }
-  }
+  const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement, isInsidePolygon, plantsInGarden, plantMacros}) => {
+    const [nutrientReq, setNutrientReq] = useState({ kReq: 0, nReq: 0 });
 
     const [open, setOpen] = useState(false);
     const [colour, setColour] = useState(null);
     const [showColourPicker, setShowColourPicker] = useState(false);
     const [newName, setNewName] = useState('');
+
+
+    // useEffect(() => {
+    //   // console.log("ONMOUNT")
+    //   nutrientAnalysis();
+    // }, [selectedMeasurement?.points, plantsInGarden])
+
+    useLayoutEffect(() => {
+      nutrientAnalysis();
+      
+    }, [])
+
+    function truncateString(str, num) {
+      if (str.length > num) {
+        return str.slice(0, num) + "...";
+      } else {
+        return str;
+      }
+    }
+    function nutrientAnalysis() {
+
+      if(selectedMeasurement?.points.length > 0 && plantsInGarden.length > 0){
+        let plantList = []
+        console.log("nutrient calc")
+        for(let x = 0; x < plantsInGarden?.length; x++){
+          let plant = plantsInGarden[x];
+          if(isInsidePolygon({ x: plant.x, y: plant.y }, selectedMeasurement?.points)){
+            plantList.push(plant);
+          }
+        }
+
+
+        let analysisData = {
+          kReq: 0,
+          nReq: 0
+        };
+      // console.log("plantsInGarden Change");
+        if(plantMacros){
+          // console.log("plantMacros", plantMacros);
+          for(let  x = 0; x < plantList.length; x++){
+            let plant = plantList[x];
+            if(plant.nutrientCalc !== null && plant.nutrientCalc === false){
+              continue;
+            }
+            let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
+            let macro = plantMacros?.plantMacroRequirements[plant.cropType];
+            // console.log(macro, plant)
+            if(macro?.nReq){
+              let nLoad = crownArea * parseFloat(macro.nReq);
+              analysisData.nReq += nLoad;
+            }
+            if(macro?.kReq){
+              let kLoad = crownArea * parseFloat(macro.kReq);
+              analysisData.kReq += kLoad;
+            }
+            setNutrientReq(analysisData);
+            // console.log(analysisData)
+          }
+        }
+        //isInsidePolygon({ x: selPlant.x, y: selPlant.y }, points)
+      }
+    }
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const handleConfirm = () => {
@@ -1394,6 +1451,12 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
                 <DriveFileRenameOutlineIcon />
               </IconButton>
           </Box> 
+ 
+        {nutrientReq && (nutrientReq.nReq.toFixed(2) !== "0.00" || nutrientReq.kReq.toFixed(2) !== "0.00") && <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+          <Typography>{`N: ${nutrientReq.nReq.toFixed(2)}g`}</Typography>  
+          <Typography>{`K: ${nutrientReq.kReq.toFixed(2)}g`}</Typography>  
+          
+        </Box>} 
           {/* {console.log(selectedMeasurement)} */} 
           <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
             {selectedMeasurement?.colour?.rgbString &&
@@ -1416,6 +1479,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
               <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Stop Adding' : 'Add Points'}</Button>
               <Button size="small" onClick={handleClearMeasurement}>Clear</Button>
             </Box> 
+            <Box sx={{display: 'flex', flexDirection: 'row'}}>
+              <Button size="small" onClick={nutrientAnalysis}>Analyse Nutrients</Button>
+            </Box>
             <Box sx={{display: 'flex', flexDirection: 'row'}}>
               <Button size="small" onClick={handleDeleteMeasurement}>Delete Plot</Button>
             </Box>
@@ -1872,52 +1938,56 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       </Box>
     </Box>}
     {/* PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement}) */}
+   
     {lastSelectedPlant && <PlantCardDetails selectedPlant={lastSelectedPlant} plantsInGarden={plantsInGarden}/>}
-      {selectedMeasurement && <PlotCardDetails 
-        selectedMeasurement={selectedMeasurement}
-        conversionFactors={conversionFactors}
-        gardenDimensions={gardenDimensions}
-        calculatePolygonArea={calculatePolygonArea}
-        handleAddRemovePoints={handleAddRemovePoints}
-        handleClearMeasurement={handleClearMeasurement}
-        handleDeleteMeasurement={handleDeleteMeasurement}
-        setSelectedMeasurement={setSelectedMeasurement} 
-      />}
-          
-      <FloatingToolbar 
-      setLocation={(coords) => {
-        let sesh = JSON.parse(JSON.stringify(currentSession))
-        sesh.data.coords = {lat: coords.lat, lon: coords.lon};
-        dispatch(setCurrentSession({data: sesh, storeSession: storeSession}))
-        // curSesh.data.coords = {lat: coords.lat, lon: coords.lon};
-        // storeSession();
-      }}
-      showShadows={showShadows}
-      setShowShadows={setShowShadows}
-      session={currentSession}
-      measurementList={measurementList} 
-      selectedMeasurement={selectedMeasurement} 
-      handleDeleteMeasurement={handleDeleteMeasurement} 
-      handleClearMeasurement={handleClearMeasurement} 
-      handleAddMeasurement={handleAddMeasurement}
-      setSelectedMeasurement={setSelectedMeasurement}
-      setMeasurementList={setMeasurementList}
+    {selectedMeasurement && <PlotCardDetails 
+      plantMacros={plantMacros}
+      plantsInGarden={plantsInGarden}
+      isInsidePolygon={isInsidePolygon}
+      selectedMeasurement={selectedMeasurement}
+      conversionFactors={conversionFactors}
       gardenDimensions={gardenDimensions}
-      retrieveData={retrieveData}
-      handleDownload={loadData}
-      storeData={storeData}
-      clear={clearData}
-      clearPlantData={clearPlantData}
-      setMeasurementColor={setMeasurementColor}
-      calcArea={()=>{
-        return selectedMeasurement !== null ?  (calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]) : null
-      }}
-      />
-      
-      </div>
-      
-      <SaveLoadModal modalData={modalData} session={currentSession} retrieveData={retrieveData}/>
+      calculatePolygonArea={calculatePolygonArea}
+      handleAddRemovePoints={handleAddRemovePoints}
+      handleClearMeasurement={handleClearMeasurement}
+      handleDeleteMeasurement={handleDeleteMeasurement}
+      setSelectedMeasurement={setSelectedMeasurement} 
+    />}
+        
+    <FloatingToolbar 
+    setLocation={(coords) => {
+      let sesh = JSON.parse(JSON.stringify(currentSession))
+      sesh.data.coords = {lat: coords.lat, lon: coords.lon};
+      dispatch(setCurrentSession({data: sesh, storeSession: storeSession}))
+      // curSesh.data.coords = {lat: coords.lat, lon: coords.lon};
+      // storeSession();
+    }}
+    showShadows={showShadows}
+    setShowShadows={setShowShadows}
+    session={currentSession}
+    measurementList={measurementList} 
+    selectedMeasurement={selectedMeasurement} 
+    handleDeleteMeasurement={handleDeleteMeasurement} 
+    handleClearMeasurement={handleClearMeasurement} 
+    handleAddMeasurement={handleAddMeasurement}
+    setSelectedMeasurement={setSelectedMeasurement}
+    setMeasurementList={setMeasurementList}
+    gardenDimensions={gardenDimensions}
+    retrieveData={retrieveData}
+    handleDownload={loadData}
+    storeData={storeData}
+    clear={clearData}
+    clearPlantData={clearPlantData}
+    setMeasurementColor={setMeasurementColor}
+    calcArea={()=>{
+      return selectedMeasurement !== null ?  (calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]) : null
+    }}
+    />
+    
     </div>
+    
+    <SaveLoadModal modalData={modalData} session={currentSession} retrieveData={retrieveData}/>
+  </div>
   );
 };
 
