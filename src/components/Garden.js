@@ -1021,12 +1021,12 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   };
 
   
-  function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index}) {
+  function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index, fullOpacity}) {
     const clipPathId = `clip-circle-${Math.random().toString(36).substr(2, 9)}`;
     const transformOrigin = `${radius}px ${radius}px`;
   
     return (
-      <svg width={radius * 2} height={radius * 2} x={cx - radius} y={cy - radius} visibility={(role && role.includes(selectedPermRole)) ? "visible" : "hidden"} onMouseDown={(e) => handlePointMouseDown(index, e, "plant")}>
+      <svg width={radius * 2} height={radius * 2} x={cx - radius} y={cy - radius} opacity={(fullOpacity) ? 1 : 0.33} onMouseDown={(e) => handlePointMouseDown(index, e, "plant")}>
         <defs>
           <clipPath id={clipPathId}>
             <circle cx={radius} cy={radius} r={radius} />
@@ -1107,7 +1107,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     
     return (
       <React.Fragment key={index}>
-        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} index={index}/>
+        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={[selectedPermRole].includes(plant["Perm Role"])} index={index}/>
         {summerSolsticeShadowPolygon && (
           <polygon
             points={summerSolsticeShadowPolygon}
