@@ -1479,9 +1479,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
               <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Stop Adding' : 'Add Points'}</Button>
               <Button size="small" onClick={handleClearMeasurement}>Clear</Button>
             </Box> 
-            <Box sx={{display: 'flex', flexDirection: 'row'}}>
+            {/* <Box sx={{display: 'flex', flexDirection: 'row'}}>
               <Button size="small" onClick={nutrientAnalysis}>Analyse Nutrients</Button>
-            </Box>
+            </Box> */}
             <Box sx={{display: 'flex', flexDirection: 'row'}}>
               <Button size="small" onClick={handleDeleteMeasurement}>Delete Plot</Button>
             </Box>
