@@ -1021,7 +1021,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   };
 
   
-  function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index, fullOpacity}) {
+  function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index, fullOpacity, isLastSelected}) {
     const clipPathId = `clip-circle-${Math.random().toString(36).substr(2, 9)}`;
     const transformOrigin = `${radius}px ${radius}px`;
   
@@ -1032,6 +1032,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
             <circle cx={radius} cy={radius} r={radius} />
           </clipPath>
         </defs>
+        {isLastSelected && <circle cx={radius} cy={radius} r={radius} fill='rgba(169, 173, 98, 1)' />}
         <ImageWithFallback
           imageUrl={imageUrl}
           radius={radius}
@@ -1079,7 +1080,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   }
   
 
-  const renderPlants = () => {
+  const renderPlants = ({lastSelectedPlant}) => {
     
     return plantsInGarden.map((plant, index) => {
     // let pathArr = plant.path.split("/")
@@ -1094,6 +1095,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     let winterSolsticeShadowPolygon = null;
     let equinoxShadowPolygon = null;
     let winterEquinoxShadowPolygon = null;
+    let isLastSelected = false;
+    if(lastSelectedPlant?.id === plant.id)
+      isLastSelected = true;
     
     if(selectedPermRole && currentSession?.data?.coords && [selectedPermRole].includes(plant["Perm Role"]) && showShadows && plant.shadow !== false){
       summerSolsticeShadowPolygon = getShadowMapForDay(plant.x, plant.y, new Date('2022-06-21'), plantHeight, currentSession.data.coords);
@@ -1107,7 +1111,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     
     return (
       <React.Fragment key={index}>
-        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={[selectedPermRole].includes(plant["Perm Role"])} index={index}/>
+        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={[selectedPermRole].includes(plant["Perm Role"])} index={index} isLastSelected={isLastSelected}/>
         {summerSolsticeShadowPolygon && (
           <polygon
             points={summerSolsticeShadowPolygon}
@@ -1773,7 +1777,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         handleMeasurementWidget={handleMeasurementWidget}
         />
         
-        {useMemo(() => renderPlants(), [plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
+        {useMemo(() => renderPlants({lastSelectedPlant}), [lastSelectedPlant, plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
         {/* {renderPlants()} */}
 
         {primaryLines.map((line, index) => (
