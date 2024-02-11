@@ -7,8 +7,9 @@ import PlantIcons from './PlantIcons';
 import { Select, MenuItem, FormControl, InputLabel, ListItemIcon, Box, ListItemText, Button, TextField, Modal, Typography, ToggleButton, TextareaAutosize, FormControlLabel, Checkbox, OutlinedInput, Chip,  } from '@mui/material';
 import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
+import Shade from '@mui/icons-material/WbShade';
 
-const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setOpenPlantModal,openPlantModal}) => {
+const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setOpenPlantModal,openPlantModal}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const fetching = useRef(false);
@@ -134,18 +135,26 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
   return (
   <Toolbar sx={{position: 'fixed', top: 0, left: 0, right: 0, padding: 2, zIndex: 50, backgroundColor: '#fff'}}>
     <Box sx={{display: 'flex', maxHeight: 50, flexDirection: 'row', justifyContent: 'space-between', width: "100%"}}>
-      <Box>
+      <Box sx={{display: 'flex', flexDirection: 'row'}}>
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
           <Button sx={{maxHeight: 20}} onClick={() => {
             showKeys(true)
             }}>Help</Button>
           <SyncButton  sx={{maxHeight: 20}}  disabled={isFetching} fetchSheetData={fetchSheetData}/> 
         </Box>
+
+        {currentSession?.data?.coords?.lon && <Button
+              color="primary"
+              startIcon={<Shade />}
+              onClick={()=>{
+                setShowShadows(!showShadows)
+              }}
+          />}
       </Box>
-      <Box sx={{ paddingTop: 1}}>
-        <FormControl sx={{paddingRight: 2}}>
+      <Box sx={{flexDirection: 'row', justifyContent: 'center', height: '100%'}} >
+        <FormControl sx={{paddingRight: 2,}}>
           <InputLabel>Unit</InputLabel>
-          <Select sx={{maxHeight: 30}}value={unit} onChange={(e) => setUnit(e.target.value)}>
+          <Select sx={{maxHeight: 50, width: '5vw'}}value={unit} onChange={(e) => setUnit(e.target.value)}>
               <MenuItem value="cm">cm</MenuItem>
               <MenuItem value="m">m</MenuItem>
               <MenuItem value="in">in</MenuItem>
@@ -161,7 +170,7 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
         {permRoles.length > 0 && <FormControl sx={{paddingRight: 2}}>
           <InputLabel>Role</InputLabel>
           <Select
-            sx={{maxHeight: 30, minWidth: 50}} 
+            sx={{maxHeight: 50, minWidth: '10vw'}} 
             value={selectedPermRole}
             onChange={handlePermRoleChange}
           >
@@ -171,14 +180,16 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
             
           </Select>
         </FormControl> }
-          {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />} 
-          {/* {selectedPlants.length > 0 && <Button onClick={handleVisibilityToggle}>Toggle Visibility</Button>} */}
+        {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />}  
+
+        <FormControl sx={{flexDirection: 'row', justifyItems: 'center', alignSelf: 'center', height: '100%', paddingTop: 1}}>
           {selectedPlant && <Button onClick={handleOpen}>Info/Plant Config</Button>}
           <Button onClick={toggleEdit}>{isEditing ? '- Points' : '+ Points'}</Button>
           <Button sx={{color: 'red'}} onClick={() => {
             clearGarden(true)
             setTimeout(() => { clearGarden(false)}, 50)
             }}>DELETE</Button>
+        </FormControl>
       </Box>
 
       <Box>
@@ -305,9 +316,9 @@ const TB = ({ setEditing, clearGarden, onGardenDimensionsChange, openHeightMap, 
         <Typography id="rename-modal" variant="h6" component="h2">
         KeyBindings and Tips
         </Typography>
-        <Typography fontWeight="bold">
+        {/* <Typography fontWeight="bold">
           {`Zoom In/Out/Reset: +/-/Space`}
-        </Typography>
+        </Typography> */}
         <Typography fontWeight="bold">
           {`Camera Move: Middle Mouse Drag`}
         </Typography>

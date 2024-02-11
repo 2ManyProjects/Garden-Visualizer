@@ -11,6 +11,7 @@ function App() {
   const [gardenDimensions, setGardenDimensions] = useState({  unit: null });
   const [openHeightMap, setOpenHeightMap] = useState(false);
   const [scale, setScale] = useState(1);
+  const [showShadows, setShowShadows] = useState(true);
  
   const handleGardenDimensionsChange = (unit) => {
     setGardenDimensions({  unit });
@@ -21,6 +22,8 @@ function App() {
       <Toolbar 
       setEditing={setIsEditing} 
       clearGarden={setClearGarden} 
+      showShadows={showShadows}
+      setShowShadows={setShowShadows}
       onGardenDimensionsChange={handleGardenDimensionsChange} 
       setOpenHeightMap={setOpenHeightMap}
       openHeightMap={openHeightMap}
@@ -30,6 +33,8 @@ function App() {
       openPlantModal={openPlantModal}
       />
       <Garden
+      showShadows={showShadows}
+      setShowShadows={setShowShadows}
       setGlobalScale={setScale}
       isEditing={isEditing} 
       clearGarden={clearGarden}

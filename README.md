@@ -95,6 +95,8 @@ Once your done adding your various plots (or skip that if your more freeform) we
 - Herbaceous
 - Rhizosphere
 - Ground Cover
+- Aquatic
+- Mycelial 
 
 Some plants might be present across multiple roles, or might have varieties or cultivars that are in differnt roles form the main plant. 
 

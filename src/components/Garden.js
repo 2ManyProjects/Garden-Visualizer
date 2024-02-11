@@ -2,9 +2,9 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
-import { setAllPlantData, setCurrentSession, setPlantsInGarden } from '../redux/gardenSlice'; // Import setPlantData
+import { setAllPlantData, setCurrentSession, setPlantsInGarden, setSelectedPlant } from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
-import { Typography, Box, Modal, IconButton, Button, Select, MenuItem, Dialog, DialogTitle, Grid } from '@mui/material';
+import { Typography, Box, Modal, IconButton, Card, CardActions, CardContent, Button, TextField } from '@mui/material';
 import SunCalc from 'suncalc'
 import mapboxgl from 'mapbox-gl';
 import {MapModal} from './EnvironmentalDataModal'
@@ -14,7 +14,11 @@ import Map, {Source, Layer} from 'react-map-gl';
 import Slider from '@mui/material/Slider';
 import MeasurementList from './MeasurementList';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import { SwatchesPicker } from 'react-color'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import ColorLensIcon from '@mui/icons-material/ColorLens';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import CloseIcon from '@mui/icons-material/Close';
 
 let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 const conversionFactors = {
@@ -28,7 +32,7 @@ const conversionFactors = {
 };
 const pixelsPerMeter = 10;
 var map = null;
-const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setGlobalScale }) => {
+const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDimensions, openHeightMap, setOpenHeightMap, setOpenFeedBackModal, openFeedBackModal, setGlobalScale }) => {
   const dispatch = useDispatch();
   const [modalData, setmodalData] = useState({
     type: null,
@@ -41,6 +45,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   const [selectedMeasurement, setSelectedMeasurement] = useState(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState(null);
   const [lastSelectedPointIndex, setLastSelectedPointIndex] = useState(null);
+  const [lastSelectedPlant, setLastSelectedPlant] = useState(null);
   const [selectedPlantIndex, setSelectedPlantIndex] = useState(null);
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
@@ -49,8 +54,7 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: window.innerHeight * 0.81 });
   const [scale, setScale] = useState(1);
-
-  const [showShadows, setShowShadows] = useState(true);
+ 
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -203,19 +207,19 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
     let newX = parseFloat(svgRef.current.viewBox.baseVal.x);
     let newY = parseFloat(svgRef.current.viewBox.baseVal.y);
     switch(e.key) {
-      case '+':
-      case '=': // Zoom in
-        handleZoom(1, mousePosition);
-        break;
-      case '_':
-      case '-': // Zoom out
-        handleZoom(-1, mousePosition);
-        break;
-        case ' ': // Zoom out
-          setScale(1);
-          svgRef.current.setAttribute('viewBox', `${0} ${0} ${1000} ${1000}`);
-          setViewBox({ ...viewBox, x: 0, y: 0, width: 1000  });
-          break;
+      // case '+':
+      // case '=': // Zoom in
+      //   handleZoom(1, mousePosition);
+      //   break;
+      // case '_':
+      // case '-': // Zoom out
+      //   handleZoom(-1, mousePosition);
+      //   break;
+        // case ' ': // Zoom out
+        //   setScale(1);
+        //   svgRef.current.setAttribute('viewBox', `${0} ${0} ${1000} ${1000}`);
+        //   setViewBox({ ...viewBox, x: 0, y: 0, width: 1000  });
+        //   break;
       default:
         return; // Ignore other keys
     }
@@ -607,7 +611,9 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
           y: cursorpt.y,
           cropType: selectedPlant["Crop Type"],
           nutrientCalc: selectedPlant["nutrientCalc"],
+          latin: selectedPlant["Latin"],
           shadow: selectedPlant["shadow"],
+          name: selectedPlant["Name"],
           lifespan: selectedPlant["usrLifespan"]  ||  parseAndGenerateNumber(selectedPlant["Lifespan"]),
           rootDepth: selectedPlant["usrRoot Depth (m)"]  ||  parseAndGenerateNumber(selectedPlant["Root Depth (m)"]),
           crownDia: selectedPlant["usrCrown Spread (m)"] ? parseFloat(selectedPlant["usrCrown Spread (m)"]): parseAndGenerateNumber(selectedPlant["Crown Spread (m)"], 1),
@@ -617,8 +623,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
           "Perm Role": selectedPlant["Perm Role"],
           spread: spread,
           rotation: (["Herbaceous", "Vertical", "Rhizosphere", "Ground Cover"].includes(selectedPlant["Perm Role"])) ? Math.floor(Math.random() * 30) : Math.floor(Math.random() * 180),
-          path:  selectedPlant.path
-          // ...selectedPlant
+          path:  selectedPlant.path,
+          ...selectedPlant
         };
       
         dispatch(setPlantsInGarden([...plantsInGarden, newPlant]))
@@ -742,6 +748,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       
       if(e.button === 0){
         // check local Edit list
+
+        setLastSelectedPlant(plantsInGarden[index])
         setSelectedPlantIndex(index);
       }else if(e.button === 2) {
         dispatch(setPlantsInGarden(plantsInGarden.filter((_, i) => i !== index)));
@@ -899,7 +907,6 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
         cursorpt.x /= scale;
         cursorpt.y /= scale;
-
         dispatch(setPlantsInGarden(plantsInGarden.map((plant, index) => {
           if (index === selectedPlantIndex) {
             return { ...plant, x: cursorpt.x, y: cursorpt.y };
@@ -930,8 +937,11 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
 
   const setMeasurementColor = (colour) => {
     let measurement = selectedMeasurement;
-    measurement.colour = {...colour, rgbString: `rgba( ${colour.rgb.r}, ${colour.rgb.g}, ${colour.rgb.b}, 0.5)`}
-    // console.log(measurement);
+    if(colour)
+      measurement.colour = {...colour, rgbString: `rgba( ${colour.rgb.r}, ${colour.rgb.g}, ${colour.rgb.b}, 0.5)`}
+    else 
+      measurement.colour = null;
+      // console.log(measurement);
     setMeasurementList(list => list.map(item => {
       if(item.id === measurement.id){
           return measurement;
@@ -1225,6 +1235,24 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
   
     return crownSpreadInPixels;
   };
+  
+
+
+  const handleAddRemovePoints = () => {
+    console.log("handleAddRemovePoints");
+    let measurement = selectedMeasurement;
+    measurement.addPoints = !measurement.addPoints;
+    // console.log(measurement);
+    setMeasurementList(list => list.map(item => {
+        if(item.id === measurement.id){
+            return measurement;
+        }else {
+            return item;
+        }
+
+    }))
+    setSelectedMeasurement(measurement);
+  };
 
 
   const textX = 10; // Start text close to the top-left corner
@@ -1286,6 +1314,323 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
     borderLeft: '1px solid black',
     marginBottom: '4px',
   }; 
+
+
+  const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement}) => {
+  function truncateString(str, num) {
+    if (str.length > num) {
+      return str.slice(0, num) + "...";
+    } else {
+      return str;
+    }
+  }
+
+    const [open, setOpen] = useState(false);
+    const [colour, setColour] = useState(null);
+    const [showColourPicker, setShowColourPicker] = useState(false);
+    const [newName, setNewName] = useState('');
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+    const handleConfirm = () => {
+      let measurement = selectedMeasurement;
+      measurement.name = newName;
+      // console.log(measurement);
+      setMeasurementList(list => list.map(item => {
+          if(item.id === measurement.id){
+              return measurement;
+          }else {
+              return item;
+          }
+  
+      }))
+      setSelectedMeasurement(measurement);
+      handleClose();
+    };
+  
+    
+    return (
+      <Box sx={{ 
+        // pointerEvents: 'none',
+        position: 'fixed', 
+        left: '80vw',
+        top: '56vh', 
+      }}> 
+       {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
+
+      <Card variant="outlined" sx={{ width: '20vw',height: '35vh'}}>
+        <CardContent>
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'  }}>
+              <IconButton fontSize='small' onClick={() => {setSelectedMeasurement(null)}} color="success">
+                <CloseIcon />
+              </IconButton>
+
+          </Box>
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'  }}> 
+            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              Plot Details
+            </Typography> 
+
+          </Box>
+          {/* {selectedMeasurement?.id && <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+            {selectedMeasurement?.id }
+          </Typography>} */}
+          
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
+            {selectedMeasurement?.name &&  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+            {truncateString(selectedMeasurement?.name, 15) }
+          </Typography>}
+
+              <IconButton onClick={() => handleOpen(true)} color="success">
+                <DriveFileRenameOutlineIcon />
+              </IconButton>
+          </Box> 
+          {/* {console.log(selectedMeasurement)} */} 
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
+            {selectedMeasurement?.colour?.rgbString &&
+              <Box sx={{ marginLeft: `1vw`, width: '5vw', height: 20,  backgroundColor: selectedMeasurement.colour.rgbString, border: '1px solid black'}}> </Box>}
+
+              <IconButton onClick={() => setShowColourPicker(true)} color="success">
+                <ColorLensIcon />
+              </IconButton>
+          </Box> 
+
+          {selectedMeasurement?.points.length > 2 && <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+            <Typography sx={{ fontSize: 14 }} color="text.secondary">
+              {` ${((calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit])).toFixed(2)} sq ${gardenDimensions.unit}`}
+            </Typography>
+          </Box>}
+        </CardContent>
+        <CardActions>
+          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
+            <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+              <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Stop Adding' : 'Add Points'}</Button>
+              <Button size="small" onClick={handleClearMeasurement}>Clear</Button>
+            </Box> 
+            <Box sx={{display: 'flex', flexDirection: 'row'}}>
+              <Button size="small" onClick={handleDeleteMeasurement}>Delete Plot</Button>
+            </Box>
+          </Box>
+        </CardActions>
+          
+        </Card>
+
+        <Modal
+          open={showColourPicker}
+          onClose={()=> setShowColourPicker(false)}
+          aria-labelledby="colour-modal"
+          aria-describedby="colour-modal-description"
+        >
+          <Box sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 400,
+              bgcolor: 'background.paper',
+              boxShadow: 24,
+              p: 4,
+          }}>
+            <SwatchesPicker onChangeComplete={(color) =>{setColour(color)}}/>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button onClick={()=> {
+                  setColour(null);
+                  setMeasurementColor(null);
+                  setShowColourPicker(false);
+                }}>Cancel</Button>
+              <Button onClick={()=> {
+                  setMeasurementColor(colour);
+                  setShowColourPicker(false);
+                }} sx={{ ml: 1 }}>Confirm</Button>
+            </Box>
+          </Box>
+        </Modal>
+
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="rename-modal"
+          aria-describedby="rename-modal-description"
+          sx={{zIndex: 100000}}
+        >
+          <Box sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 400,
+              bgcolor: 'background.paper',
+              boxShadow: 24,
+              p: 4,
+          }}>
+            <Typography id="rename-modal" variant="h6" component="h2">
+              Enter Measurement Plot Name
+            </Typography>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="New Name"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={newName}
+              onChange={(e) => {
+                e.stopPropagation();
+                setNewName(e.target.value);
+                e.preventDefault();
+              }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button onClick={handleConfirm} sx={{ ml: 1 }}>Confirm</Button>
+            </Box>
+          </Box>
+        </Modal>
+      </Box>
+    )
+  }
+
+  const PlantCardDetails = ({selectedPlant, plantsInGarden}) => {
+
+    function validOrClose() {
+      let found = plantsInGarden.find(item => selectedPlant.id === item.id)
+      if(!found)
+        setLastSelectedPlant(null);
+    }
+
+    function truncateString(str, num) {
+      if (str.length > num) {
+        return str.slice(0, num) + "...";
+      } else {
+        return str;
+      }
+    }
+
+    const [open, setOpen] = useState(false);
+    const [newName, setNewName] = useState('');
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+    const handleConfirm = () => {
+      validOrClose();
+      let plant = {...selectedPlant};
+      plant.nickname = newName;
+      // console.log(measurement);
+
+      const newPlantsInGarden = plantsInGarden.map(item => {
+          if(item.id === plant.id){
+              return plant;
+          }else {
+              return item;
+          }
+
+      });
+      dispatch(setPlantsInGarden(newPlantsInGarden));
+      setLastSelectedPlant(plant);
+      handleClose();
+    }; 
+    
+    return (
+      <Box sx={{ 
+        // pointerEvents: 'none',
+        position: 'fixed', 
+        left: '0vw',
+        top: '40vh', 
+      }}> 
+       {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
+
+      <Card variant="outlined" sx={{ width: '20vw',height: '35vh'}}>
+        <CardContent>
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end'  }}>
+              <IconButton fontSize='small' onClick={() => {setLastSelectedPlant(null)}} color="success">
+                <CloseIcon />
+              </IconButton>
+
+          </Box>
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'  }}> 
+            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+             {` ${selectedPlant?.latin|| ""}`}
+            </Typography> 
+
+          </Box>
+          
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
+              {selectedPlant?.name &&  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              {truncateString(selectedPlant?.name, 15) }
+            </Typography>}
+          </Box> 
+          
+          
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
+              {selectedPlant?.nickname &&  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              {truncateString(selectedPlant?.nickname, 15) }
+            </Typography>}
+
+            <IconButton onClick={() => {validOrClose(); handleOpen(true)}} color="success">
+              <DriveFileRenameOutlineIcon />
+            </IconButton>
+          </Box> 
+          
+        </CardContent>
+        <CardActions>
+          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
+            
+            <Box sx={{display: 'flex', flexDirection: 'row'}}>
+              <Button size="small" onClick={() => {
+                validOrClose(); 
+                dispatch(setPlantsInGarden(plantsInGarden.filter((plant, i) => plant.id !== selectedPlant.id)))
+              }}>Delete Plant</Button>
+            </Box>
+          </Box>
+        </CardActions>
+          
+      </Card>
+
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="rename-modal"
+          aria-describedby="rename-modal-description"
+          sx={{zIndex: 100000}}
+        >
+          <Box sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 400,
+              bgcolor: 'background.paper',
+              boxShadow: 24,
+              p: 4,
+          }}>
+            <Typography id="rename-modal" variant="h6" component="h2">
+              Enter Plant Nickname
+            </Typography>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="New Nickname"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={newName}
+              onChange={(e) => {
+                e.stopPropagation();
+                setNewName(e.target.value);
+                e.preventDefault();
+              }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button onClick={handleConfirm} sx={{ ml: 1 }}>Confirm</Button>
+            </Box>
+          </Box>
+        </Modal>
+      </Box>
+    )
+  }
+
+
   return (
     <div style={{ position: 'relative', height: '100%'  }}onContextMenu={handleContextMenu}>
       <div style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', height: '100%'  }}>
@@ -1309,13 +1654,13 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
 
           <Modal 
           open={openHeightMap}
+          onClose={() => {}}
           style={{
             position: 'absolute',
-            top: '45%',
-            left: '70%',
-            height: '40vh',
+            top: '12%',
+            left: '74%',
+            height: '20vh',
             transform: 'translate(0, 0)',
-            width: "25vw",
             bgcolor: 'background.paper',
             overflowY: 'scroll'}}
           disableEnforceFocus
@@ -1323,9 +1668,6 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
             style: {
               backgroundColor: 'transparent',
               boxShadow: 'none',
-            },
-            onClick: (event) => {
-              // console.log(event)
             }
           }}} 
           >
@@ -1347,7 +1689,6 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
                 maxzoom={16}
               />
             </Map>
-            {/* <div id="map-container"  /> */}
           </Modal>
           
           
@@ -1444,8 +1785,8 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
       display: 'flex',
       justifyContent: 'center'
     }}>
-    {primaryLines && primaryLines.length > 0 && <Box style={{ position: 'fixed', bottom: '15vh', left: 0, right: 0, height: '8vh', width: '20vh' }}>
-      <Box style={{display: 'flex', flexDirection: 'column', width: 40}}>
+    {primaryLines && primaryLines.length > 0 && <Box style={{ position: 'fixed', bottom: '11vh', left: 0, right: 0, height: '8vh', width: '20vh' }}>
+      <Box style={{display: 'flex', flexDirection: 'row', width: 40}}>
         <IconButton style={{backgroundColor: '#8df48b', border: '1px solid #000'}} onClick={() => handleZoom(1)} color="success">
           <ZoomInIcon />
         </IconButton>
@@ -1517,6 +1858,19 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
           </Box> 
       </Box>
     </Box>}
+    {/* PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement}) */}
+    {lastSelectedPlant && <PlantCardDetails selectedPlant={lastSelectedPlant} plantsInGarden={plantsInGarden}/>}
+      {selectedMeasurement && <PlotCardDetails 
+        selectedMeasurement={selectedMeasurement}
+        conversionFactors={conversionFactors}
+        gardenDimensions={gardenDimensions}
+        calculatePolygonArea={calculatePolygonArea}
+        handleAddRemovePoints={handleAddRemovePoints}
+        handleClearMeasurement={handleClearMeasurement}
+        handleDeleteMeasurement={handleDeleteMeasurement}
+        setSelectedMeasurement={setSelectedMeasurement} 
+      />}
+          
       <FloatingToolbar 
       setLocation={(coords) => {
         let sesh = JSON.parse(JSON.stringify(currentSession))
@@ -1546,7 +1900,9 @@ const Garden = ({ isEditing, clearGarden, gardenDimensions, openHeightMap, setOp
         return selectedMeasurement !== null ?  (calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]) : null
       }}
       />
+      
       </div>
+      
       <SaveLoadModal modalData={modalData} session={currentSession} retrieveData={retrieveData}/>
     </div>
   );

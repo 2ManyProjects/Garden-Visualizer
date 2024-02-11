@@ -20,7 +20,7 @@ const PlantIcons = ({isPlantSelectorEnabled, isEditing, maxHeight}) => {
       <InputLabel>Plant</InputLabel>
       <Select
         // value={selectedValue}
-        sx={{maxHeight: maxHeight, minWidth: 100}}
+        sx={{maxHeight: 50, width: '10vw'}}
         label="Plant"
         onChange={(e) => dispatch(setSelectedPlant(e.target.value))}
       >

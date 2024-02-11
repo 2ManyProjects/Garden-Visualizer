@@ -279,9 +279,9 @@ export function EnvironmentalDataModal({session, setLocation}) {
     };
     return (
       <Box>
-        {session?.id && <Button variant="contained" color="primary" onClick={() => setOpen(true)}>
-          Location Data
-        </Button>}
+        <Button disabled={!session.id}variant="contained" color="primary" onClick={() => setOpen(true)}>
+          Location Data{!session.id && ` (create save to enable)`}
+        </Button>
         <Modal open={open} onClose={() => {setOpen(false)}}>
           <Box sx={modalStyle}>
             {session?.data?.coords &&
