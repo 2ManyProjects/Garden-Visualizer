@@ -60,6 +60,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const { permRoles, selectedPlants, selectedPlant, plantsInGarden, selectedPermRole, plants, plantMacros, currentSession, astroData } = useSelector(state => state.garden); 
 
+  useEffect(() => {
+    setLastSelectedPlant(null)
+  }, [selectedPermRole, selectedPlants, selectedPlant])
     
   // useEffect(() => {
   //   if (openHeightMap) {
