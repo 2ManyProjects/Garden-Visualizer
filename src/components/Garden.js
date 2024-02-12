@@ -668,7 +668,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
 
       }
       // Generate a random integer within the range
-      return Math.random() * (end - start) + start
+      // return Math.random() * (end - start) + start
+      return (end + start) / 2
     } else {
       // If not a range, simply convert the string to an integer
       return parseInt(input, 10);
@@ -1453,8 +1454,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           </Box> 
  
         {nutrientReq && (nutrientReq.nReq.toFixed(2) !== "0.00" || nutrientReq.kReq.toFixed(2) !== "0.00") && <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-          <Typography>{`N: ${nutrientReq.nReq.toFixed(2)}g`}</Typography>  
-          <Typography>{`K: ${nutrientReq.kReq.toFixed(2)}g`}</Typography>  
+          <Typography>{`N: ${nutrientReq.nReq.toFixed(2)}g `}</Typography>  
+          <Typography>{` K: ${nutrientReq.kReq.toFixed(2)}g`}</Typography>  
           
         </Box>} 
           {/* {console.log(selectedMeasurement)} */} 
@@ -1581,7 +1582,6 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         return str;
       }
     }
-
     const [open, setOpen] = useState(false);
     const [newName, setNewName] = useState('');
     const handleOpen = () => setOpen(true);
@@ -1604,6 +1604,44 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       setLastSelectedPlant(plant);
       handleClose();
     }; 
+
+    const saveCrownSpread = (crownSpread) => {
+      validOrClose();
+      let plant = {...selectedPlant};
+      plant.crownSpread = calculateCrownSpread(crownSpread, gardenDimensions);
+      plant.crownDia = crownSpread;
+      console.log(crownSpread);
+
+      const newPlantsInGarden = plantsInGarden.map(item => {
+          if(item.id === plant.id){
+              return plant;
+          }else {
+              return item;
+          }
+
+      });
+      dispatch(setPlantsInGarden(newPlantsInGarden));
+      setLastSelectedPlant(plant);
+    }
+
+    const saveHeight = (height) => {
+      validOrClose();
+      let plant = {...selectedPlant};
+      plant.height = height;
+      // console.log(measurement);
+
+      const newPlantsInGarden = plantsInGarden.map(item => {
+          if(item.id === plant.id){
+              return plant;
+          }else {
+              return item;
+          }
+
+      });
+      dispatch(setPlantsInGarden(newPlantsInGarden));
+      setLastSelectedPlant(plant);
+    }
+    
     
     return (
       <Box sx={{ 
@@ -1614,7 +1652,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       }}> 
        {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
 
-      <Card variant="outlined" sx={{ width: '20vw',height: '35vh'}}>
+      <Card variant="outlined" sx={{ width: '20vw',height: '40vh', overflowY: 'scroll',}}>
         <CardContent>
           <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end'  }}>
               <IconButton fontSize='small' onClick={() => {setLastSelectedPlant(null)}} color="success">
@@ -1644,6 +1682,22 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
             <IconButton onClick={() => {validOrClose(); handleOpen(true)}} color="success">
               <DriveFileRenameOutlineIcon />
             </IconButton>
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', justifyContent: 'center' }}>
+            <TextField
+              label="Crown Spread (m)"
+              type="number"
+              variant="outlined"
+              value={selectedPlant?.crownDia}
+              onChange={(e) => saveCrownSpread(e.target.value)}
+            />
+            <TextField
+              label="Height (m)"
+              type="number"
+              variant="outlined"
+              value={selectedPlant?.height}
+              onChange={(e) => saveHeight(e.target.value)}
+            />
           </Box> 
           
         </CardContent>

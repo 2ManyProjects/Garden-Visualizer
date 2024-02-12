@@ -13,7 +13,7 @@ import { SwatchesPicker } from 'react-color'
 
 
 const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows, setMeasurementColor}) => {
-  const [isVisible, setIsVisible] = useState(false);  
+  const [isVisible, setIsVisible] = useState(true);  
   const [open, setOpen] = useState(false);
   const [colour, setColour] = useState(null);
   const [showColourPicker, setShowColourPicker] = useState(false);
