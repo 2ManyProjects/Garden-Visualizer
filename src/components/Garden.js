@@ -1568,12 +1568,25 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   }
 
   const PlantCardDetails = ({selectedPlant, plantsInGarden}) => {
+    const [open, setOpen] = useState(false);
+    const [newName, setNewName] = useState('');
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+    const [crownSpread, setCrownSpread] = useState('');
+    const [height, setHeight] = useState('');
+
+    useEffect(() => {
+      setCrownSpread(selectedPlant?.crownDia || '');
+      setHeight(selectedPlant?.height || '');
+      setNewName(selectedPlant?.nickname || '');
+    }, [selectedPlant]);
 
     function validOrClose() {
       let found = plantsInGarden.find(item => selectedPlant.id === item.id)
       if(!found)
         setLastSelectedPlant(null);
     }
+    // console.log(selectedPlant);
 
     function truncateString(str, num) {
       if (str.length > num) {
@@ -1582,10 +1595,6 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         return str;
       }
     }
-    const [open, setOpen] = useState(false);
-    const [newName, setNewName] = useState('');
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
     const handleConfirm = () => {
       validOrClose();
       let plant = {...selectedPlant};
@@ -1642,7 +1651,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       setLastSelectedPlant(plant);
     }
     
-    
+    let floatRegex = /^-?\d+(\.\d*)?$/;
     return (
       <Box sx={{ 
         // pointerEvents: 'none',
@@ -1686,17 +1695,31 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', justifyContent: 'center' }}>
             <TextField
               label="Crown Spread (m)"
-              type="number"
               variant="outlined"
-              value={selectedPlant?.crownDia}
-              onChange={(e) => saveCrownSpread(e.target.value)}
+              value={crownSpread}
+              onChange={(e) => {
+                if((floatRegex.test(e.target.value)))
+                setCrownSpread(e.target.value)}}
+              inputProps={{
+                onBlur: () => {
+                    saveCrownSpread(crownSpread);
+                }
+             }}
             />
             <TextField
               label="Height (m)"
-              type="number"
               variant="outlined"
-              value={selectedPlant?.height}
-              onChange={(e) => saveHeight(e.target.value)}
+              value={height}
+              onChange={(e) => {
+                
+                if((floatRegex.test(e.target.value)))
+                setHeight(e.target.value)}} 
+              inputProps={{
+                onBlur: () => {
+                  saveHeight(height)
+                },  
+              }
+            }
             />
           </Box> 
           
