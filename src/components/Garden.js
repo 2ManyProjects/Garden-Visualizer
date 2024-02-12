@@ -1572,8 +1572,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     const [newName, setNewName] = useState('');
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
-    const [crownSpread, setCrownSpread] = useState('');
-    const [height, setHeight] = useState('');
+    const [crownSpread, setCrownSpread] = useState(selectedPlant?.crownDia || 0);
+    const [height, setHeight] = useState(selectedPlant?.height || 0);
 
     useEffect(() => {
       setCrownSpread(selectedPlant?.crownDia || '');
