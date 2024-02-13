@@ -1776,11 +1776,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       <ToggleButtonGroup exclusive>
         <ToggleButton
           value="shadow"
-          selected={shadow}
-          onChange={()=>{
-            console.log("shade")
-            saveShadow();
-          }}
+          selected={shadow} 
           onClick={()=>{
             console.log("shade")
             saveShadow();
@@ -1792,7 +1788,10 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         <ToggleButton
           value="nutrientCalc"
           selected={nutrientCalc}
-          onChange={saveNutrientCalc}
+          onClick={()=>{
+            console.log("saveNutrientCalc")
+            saveNutrientCalc();
+          }} 
           sx={{ m: 1 }}
         >
           Nutrient Calc
