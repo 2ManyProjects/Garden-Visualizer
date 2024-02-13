@@ -2,9 +2,9 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
-import { setAllPlantData, setCurrentSession, setPlantsInGarden, setSelectedPlant } from '../redux/gardenSlice'; // Import setPlantData
+import { setAllPlantData, setCurrentSession, setPlantsInGarden, setSelectedPlant} from '../redux/gardenSlice'; // Import setPlantData
 import SaveLoadModal from "./SaveLoadModal"
-import { Typography, Box, Modal, IconButton, Card, CardActions, CardContent, Button, TextField } from '@mui/material';
+import { Typography, Box, Modal, IconButton, Card, CardActions, CardContent, Button, TextField, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import SunCalc from 'suncalc'
 import mapboxgl from 'mapbox-gl';
 import {MapModal} from './EnvironmentalDataModal'
@@ -1574,11 +1574,15 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     const handleClose = () => setOpen(false);
     const [crownSpread, setCrownSpread] = useState(selectedPlant?.crownDia || 0);
     const [height, setHeight] = useState(selectedPlant?.height || 0);
-
+    const [shadow, setShadow] = useState(selectedPlant?.shadow || false);
+    const [nutrientCalc, setNutrientCalc] = useState(selectedPlant?.nutrientCalc || false);
+    console.log(selectedPlant);
     useEffect(() => {
       setCrownSpread(selectedPlant?.crownDia || '');
       setHeight(selectedPlant?.height || '');
       setNewName(selectedPlant?.nickname || '');
+      setShadow(selectedPlant?.shadow || '');
+      setNutrientCalc(selectedPlant?.nutrientCalc || '');
     }, [selectedPlant]);
 
     function validOrClose() {
@@ -1601,8 +1605,10 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       plant.nickname = newName;
       // console.log(measurement);
 
-      const newPlantsInGarden = plantsInGarden.map(item => {
+        const newPlantsInGarden = plantsInGarden.map(item => {
           if(item.id === plant.id){
+              let plantObj = {...plant, x: item.x, y: item.y}
+              plant = plantObj
               return plant;
           }else {
               return item;
@@ -1613,22 +1619,63 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       setLastSelectedPlant(plant);
       handleClose();
     }; 
-
-    const saveCrownSpread = (crownSpread) => {
+    const saveNutrientCalc = () => {
       validOrClose();
       let plant = {...selectedPlant};
-      plant.crownSpread = calculateCrownSpread(crownSpread, gardenDimensions);
-      plant.crownDia = crownSpread;
-      console.log(crownSpread);
+      plant.nutrientCalc = !nutrientCalc; 
+      setNutrientCalc(plant.nutrientCalc);
+      
+      const newPlantsInGarden = plantsInGarden.map(item => {
+        if(item.id === plant.id){
+            let plantObj = {...plant, x: item.x, y: item.y}
+            plant = plantObj
+            return plant;
+        }else {
+            return item;
+        }
 
+    });
+      dispatch(setPlantsInGarden(newPlantsInGarden));
+      setLastSelectedPlant(plant);
+    }
+    const saveShadow = () => {
+      console.log('saveShadow');
+      validOrClose();
+      let plant = {...selectedPlant};
+      plant.shadow = !shadow; 
+      console.log(!shadow)
       const newPlantsInGarden = plantsInGarden.map(item => {
           if(item.id === plant.id){
+              let plantObj = {...plant, x: item.x, y: item.y}
+              plant = plantObj
               return plant;
           }else {
               return item;
           }
 
       });
+      setShadow(plant.shadow);
+      dispatch(setPlantsInGarden(newPlantsInGarden));
+      setLastSelectedPlant(plant);
+    }
+
+    const saveCrownSpread = (crownSpread) => {
+      validOrClose();
+      let plant = {...selectedPlant};
+      plant.crownSpread = calculateCrownSpread(crownSpread, gardenDimensions);
+      plant.crownDia = crownSpread; 
+
+      
+      const newPlantsInGarden = plantsInGarden.map(item => {
+        if(item.id === plant.id){
+            let plantObj = {...plant, x: item.x, y: item.y}
+            plant = plantObj
+            return plant;
+        }else {
+            return item;
+        }
+
+    });
       dispatch(setPlantsInGarden(newPlantsInGarden));
       setLastSelectedPlant(plant);
     }
@@ -1639,14 +1686,17 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       plant.height = height;
       // console.log(measurement);
 
+      
       const newPlantsInGarden = plantsInGarden.map(item => {
-          if(item.id === plant.id){
-              return plant;
-          }else {
-              return item;
-          }
+        if(item.id === plant.id){
+            let plantObj = {...plant, x: item.x, y: item.y}
+            plant = plantObj
+            return plant;
+        }else {
+            return item;
+        }
 
-      });
+    });
       dispatch(setPlantsInGarden(newPlantsInGarden));
       setLastSelectedPlant(plant);
     }
@@ -1657,11 +1707,11 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         // pointerEvents: 'none',
         position: 'fixed', 
         left: '0vw',
-        top: '40vh', 
+        top: '30vh', 
       }}> 
        {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
 
-      <Card variant="outlined" sx={{ width: '20vw',height: '40vh', overflowY: 'scroll',}}>
+      <Card variant="outlined" sx={{ width: '20vw',height: '50vh', overflowY: 'scroll',}}>
         <CardContent>
           <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end'  }}>
               <IconButton fontSize='small' onClick={() => {setLastSelectedPlant(null)}} color="success">
@@ -1722,6 +1772,33 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
             }
             />
           </Box> 
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+      <ToggleButtonGroup exclusive>
+        <ToggleButton
+          value="shadow"
+          selected={shadow}
+          onChange={()=>{
+            console.log("shade")
+            saveShadow();
+          }}
+          onClick={()=>{
+            console.log("shade")
+            saveShadow();
+          }}
+          sx={{ m: 1 }}
+        >
+          Shadow
+        </ToggleButton>
+        <ToggleButton
+          value="nutrientCalc"
+          selected={nutrientCalc}
+          onChange={saveNutrientCalc}
+          sx={{ m: 1 }}
+        >
+          Nutrient Calc
+        </ToggleButton>
+      </ToggleButtonGroup>
+      </Box>
           
         </CardContent>
         <CardActions>
