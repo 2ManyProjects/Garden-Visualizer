@@ -614,9 +614,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           x: cursorpt.x,
           y: cursorpt.y,
           cropType: selectedPlant["Crop Type"],
-          nutrientCalc: selectedPlant["nutrientCalc"],
+          nutrientCalc: selectedPlant["nutrientCalc"] || true,
           latin: selectedPlant["Latin"],
-          shadow: selectedPlant["shadow"],
+          shadow: selectedPlant["shadow"] || true,
           name: selectedPlant["Name"],
           lifespan: selectedPlant["usrLifespan"]  ||  parseAndGenerateNumber(selectedPlant["Lifespan"]),
           rootDepth: selectedPlant["usrRoot Depth (m)"]  ||  parseAndGenerateNumber(selectedPlant["Root Depth (m)"]),
@@ -1574,15 +1574,13 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     const handleClose = () => setOpen(false);
     const [crownSpread, setCrownSpread] = useState(selectedPlant?.crownDia || 0);
     const [height, setHeight] = useState(selectedPlant?.height || 0);
-    const [shadow, setShadow] = useState(selectedPlant?.shadow || false);
-    const [nutrientCalc, setNutrientCalc] = useState(selectedPlant?.nutrientCalc || false);
-    console.log(selectedPlant);
+    const [shadow, setShadow] = useState(selectedPlant?.shadow || null );
+    const [nutrientCalc, setNutrientCalc] = useState(selectedPlant?.nutrientCalc  || null );
+    // console.log(selectedPlant);
     useEffect(() => {
       setCrownSpread(selectedPlant?.crownDia || '');
       setHeight(selectedPlant?.height || '');
       setNewName(selectedPlant?.nickname || '');
-      setShadow(selectedPlant?.shadow || '');
-      setNutrientCalc(selectedPlant?.nutrientCalc || '');
     }, [selectedPlant]);
 
     function validOrClose() {
@@ -1776,7 +1774,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       <ToggleButtonGroup exclusive>
         <ToggleButton
           value="shadow"
-          selected={shadow} 
+          selected={shadow === null ? true : shadow}
           onClick={()=>{
             console.log("shade")
             saveShadow();
@@ -1787,7 +1785,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         </ToggleButton>
         <ToggleButton
           value="nutrientCalc"
-          selected={nutrientCalc}
+          selected={nutrientCalc === null ? true : nutrientCalc}
           onClick={()=>{
             console.log("saveNutrientCalc")
             saveNutrientCalc();
