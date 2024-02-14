@@ -187,7 +187,7 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
         {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />}  
 
         <FormControl sx={{flexDirection: 'row', justifyItems: 'center', alignSelf: 'center', height: '100%', paddingTop: 1}}>
-          {selectedPlant && <Button onClick={handleOpen}>Info/Plant Config</Button>}
+          {selectedPlant && <Button onClick={handleOpen}>Plant Config</Button>}
           <Button onClick={toggleEdit}>{isEditing ? '- Points' : '+ Points'}</Button>
           <Button sx={{color: 'red'}} onClick={() => {
             clearGarden(true)
@@ -204,7 +204,7 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
         </Box>}
       </Box>
       <Box sx={{ paddingTop: 1}}>
-        {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>{ openHeightMap? "Close" : "Open"} HeightMap</Button>}
+        {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>HeightMap</Button>}
         <Button onClick={() => setOpenFeedBackModal(true)}>Feedback</Button>
         <Button onClick={() => setOpenPlantModal(true)}>New Plant</Button>
       </Box>

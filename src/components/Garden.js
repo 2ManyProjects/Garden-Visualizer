@@ -1278,8 +1278,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
 
   // 10 px per m , 10x 10 per m2 
   const areaInDesiredUnit = (areaInPixels / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit]); // Squared for area
-  if(areaStr !== `Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`){
-    setAreaStr(`Area: ${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`)
+  if(areaStr !== `${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`){
+    setAreaStr(`${areaInDesiredUnit.toFixed(2)} sq ${gardenDimensions.unit}`)
   }
   const { primaryLines, secondaryLines } = calculateGridLines(viewBox);
   function calculateStrokeWidth(scale) {
