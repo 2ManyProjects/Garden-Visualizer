@@ -286,10 +286,6 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
 
 const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMeter, conversionFactors, gardenDimensions, placeablePlants, setPlaceablePlants, chosenPlant, setChosenPlant, setMousePosition, mousePosition, plotPlants, setPlotPlants}) => {
 
-
-
- 
-
   const centroid = selectedMeasurement.points.reduce(
     (acc, point) => {
       return {
@@ -554,8 +550,8 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
                   <circle 
                       cx={successionPlant.crownSpread / 2}
                       cy={successionPlant.crownSpread / 2}
-                      // r={successionPlant.crownSpread / 2}  
-                      r={50}  
+                      r={successionPlant.crownSpread / 2}  
+                      // r={50}  
                       fill={successionPlant.colour? successionPlant.colour : "#9CCC65"} 
                     /></svg> 
               )
@@ -694,7 +690,7 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
       <Grid container justifyContent="center" onClick={() => {
         if(selectedPlant){
           handleAddPlant();
-          setSelectedPlant(null);
+          // setSelectedPlant(null);
         }
       }}>
         {months.map((month, index) => (
