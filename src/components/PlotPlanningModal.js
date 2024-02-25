@@ -705,90 +705,96 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
     setRows(prevRows => [...prevRows, []]);
   };
   return (
-    <Box style={{ width: '100%', overflowY: 'hidden',  padding: '1rem' }}>
+    <Paper style={{ width: '100%', position: 'relative', overflowY: 'auto',  padding: '1rem', height: '470px' }}>
       <Typography variant="h5" align="center" gutterBottom>
         Garden Calendar
       </Typography>
-      <Grid container justifyContent="center" onClick={() => {
-        if(selectedPlant){
-          handleAddPlant();
-          // setSelectedPlant(null);
-        }
-      }}>
-        {months.map((month, index) => (
-          <Grid item xs key={index} style={{ textAlign: 'center' }}>
-            <Typography variant="body2">{month.name}</Typography>
-            <Grid container>
-              {Array.from({ length: month.weeks }, (_, weekIndex) => {
-                
-                let cumulativeWeeks = 0;
-                for(let x = 0; x < index; x++){
-                  cumulativeWeeks +=  months[x].weeks;
-                }
-                cumulativeWeeks += weekIndex;
-                return(
-                <Grid item xs  key={weekIndex} style={{ textAlign: 'center', borderRight: '1px solid #ddd', borderBottom: '1px solid #ddd', backgroundColor: selectedWeekIndex === (cumulativeWeeks) ? '#c8cc84' : '#ffffff' }}>
-                  <Typography variant="body2">{weekIndex + 1}</Typography>
-                </Grid>
-              )})}
-            </Grid>
-            {rows.map((row, rowIndex) => 
-            {
-              return<Grid container onMouseOver={()=> {{
-                setSelectedRow(() => rowIndex)}}}>
+      <Box sx={{  overflowY: 'auto' }}>
+        <Grid container justifyContent="center" onClick={() => {
+          if(selectedPlant){
+            let isDisabled = selectedRow !== null && rows[selectedRow].length > 0;
+            if(!isDisabled)
+              handleAddPlant();
+            // setSelectedPlant(null);
+          }
+        }}>
+          {months.map((month, index) => (
+            <Grid item xs key={index} style={{ textAlign: 'center' }}>
+              <Typography variant="body2">{month.name}</Typography>
+              <Grid container>
                 {Array.from({ length: month.weeks }, (_, weekIndex) => {
-                let cumulativeWeeks = 0;
-                for(let x = 0; x < index; x++){
-                  cumulativeWeeks +=  months[x].weeks;
-                }
-                cumulativeWeeks += weekIndex;
                   
+                  let cumulativeWeeks = 0;
+                  for(let x = 0; x < index; x++){
+                    cumulativeWeeks +=  months[x].weeks;
+                  }
+                  cumulativeWeeks += weekIndex;
                   return(
-                <Grid item xs  key={weekIndex} style={{ textAlign: 'center', borderRight: '1px solid #ddd', borderBottom: '1px solid #ddd' }} onMouseOver={()=> setSelectedWeekIndex(cumulativeWeeks)}>
-                  <Typography variant="body2"  sx={{color: "rgba(100,100,100, 0)", 
-                  userSelect: 'none',  
-                  WebkitUserSelect: 'none',  
-                  msUserSelect: 'none'  }}>{weekIndex + 1}</Typography>
-                </Grid>
-              )})}
-              </Grid> 
-            })}
-            {rows.map((row, rowIndex)=> row.map((data, index) =>{
-              return <FloatingPlantBox
-              months={months}
-              key={index}
-              plant={data.plant}
-              rowIndex={data.selectedRow}
-              weekIndex={data.selectedWeekIndex}
-              onDelete={() => {
-                let temp = [...rows];
-                temp[rowIndex].splice(index, 1);
-                setRows(temp);
-              }}
-              colour={'green'}/>
-            }))}
-            {selectedPlant && (
-              <FloatingPlantBox
-              months={months}
-              plant={selectedPlant}
-              rowIndex={selectedRow}
-              weekIndex={selectedWeekIndex}
-              colour={'grey'}/>
-            )}
-          </Grid>
-        ))}
-      </Grid> 
+                  <Grid item xs  key={weekIndex} style={{ textAlign: 'center', borderRight: '1px solid #ddd', borderBottom: '1px solid #ddd', backgroundColor: selectedWeekIndex === (cumulativeWeeks) ? '#c8cc84' : '#ffffff' }}>
+                    <Typography variant="body2">{weekIndex + 1}</Typography>
+                  </Grid>
+                )})}
+              </Grid>
+                {rows.map((row, rowIndex) => 
+                {
+                  return<Grid container onMouseOver={()=> {{
+                    setSelectedRow(() => rowIndex)}}}>
+                    {Array.from({ length: month.weeks }, (_, weekIndex) => {
+                    let cumulativeWeeks = 0;
+                    for(let x = 0; x < index; x++){
+                      cumulativeWeeks +=  months[x].weeks;
+                    }
+                    cumulativeWeeks += weekIndex;
+                      
+                      return(
+                    <Grid item xs  key={weekIndex} style={{ textAlign: 'center', borderRight: '1px solid #ddd', borderBottom: '1px solid #ddd' }} onMouseOver={()=> setSelectedWeekIndex(cumulativeWeeks)}>
+                      <Typography variant="body2"  sx={{color: "rgba(100,100,100, 0)", 
+                      userSelect: 'none',  
+                      WebkitUserSelect: 'none',  
+                      msUserSelect: 'none'  }}>{weekIndex + 1}</Typography>
+                    </Grid>
+                  )})}
+                  </Grid> 
+                })}
+                {rows.map((row, rowIndex)=> row.map((data, index) =>{
+                  return <FloatingPlantBox
+                  months={months}
+                  key={index}
+                  plant={data.plant}
+                  rowIndex={data.selectedRow}
+                  weekIndex={data.selectedWeekIndex}
+                  onDelete={() => {
+                    let temp = [...rows];
+                    temp[rowIndex].splice(index, 1);
+                    setRows(temp);
+                  }}
+                  colour={'rgba(36, 147, 36, 0.08)'}/>
+                }))} 
+                {selectedPlant && (
+                  <FloatingPlantBox
+                  shadow={true}
+                  months={months}
+                  plant={selectedPlant}
+                  rowIndex={selectedRow}
+                  disabled={selectedRow !== null && rows[selectedRow].length > 0}
+                  weekIndex={selectedWeekIndex}
+                  colour={'rgba(100, 100, 100, 0.08)'}/>
+                )}
+            </Grid>
+          ))}
+        </Grid> 
+      </Box>
       <Box  align="center">
-        <Button  disabled  variant="contained" onClick={addRow} style={{ marginBottom: '1rem' }}>
+        <Button    variant="contained" onClick={addRow} style={{ marginBottom: '1rem' }}>
           Add Row
         </Button>
       </Box> 
-    </Box>
+    </Paper>
   );
 };
 
 
-const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete }) => {
+const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete, shadow, disabled }) => {
 
   
   const parseDuration = (duration) => {
@@ -836,8 +842,10 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
   let widthInWeeks = calculatePosition(plant);
   let showOverFlowBox = false
   let textInMainBox = true;
+  let addition = 0;
   // console.log(weekIndex,  widthInWeeks, weekIndex + widthInWeeks , weekIndex + widthInWeeks > 52)
   if(weekIndex + widthInWeeks > 52){
+    addition = 0.6;
     widthInWeeks = widthInWeeks - (weekIndex + widthInWeeks - 52);
     showOverFlowBox = true;
     let overFlowWeeks = calculatePosition(plant) - widthInWeeks;
@@ -867,19 +875,20 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
       break;
     }
   }
-  let h = 2.6;
-  let w = 1.9;
+  let h = 3.6;
+  let w = 2;
   // console.log(widthInWeeks, weekFiveIndex, widthInWeeks - weekFiveIndex)
   //needed to adjust for 5 week vs 4 weeks months
-  const boxWidth = `${(widthInWeeks - weekFiveIndex) * w}%`;
+  const boxWidth = `${(widthInWeeks - weekFiveIndex + addition) * w}%`;
 
   // Calculate the y-position based on the rowIndex
   // const boxTopPosition = `${rowIndex * h + 20.8}vh`; // Example calculation, adjust as necessary
-  const boxTopPosition = `${rowIndex * (h + 0.18) + 24.5}%`;
+  const boxTopPosition = `${rowIndex * (h + 0.6) + 19.3}%`;
 
-  // Use a ref to the grid container to calculate the x-position
-  const boxLeftPosition = `${(weekIndex - 1) * w + (7.8 * (1 - (weekIndex /  52))) }%`;
-
+  // Use a ref to the grid container to calculate the x-position (1.5 * (1 - (weekIndex /  52)))
+  const boxLeftPosition = `${(weekIndex) * w  + 2 - (9 * ((weekIndex /  52))) + (1 * ((weekIndex /  52))) - 0.5 }%`;
+  // if(shadow)
+  //   console.log((widthInWeeks - weekFiveIndex) * w, (widthInWeeks - weekFiveIndex), widthInWeeks, weekFiveIndex, w)
   // Styles for the plant box
   const boxStyles = {
     position: 'absolute',
@@ -887,7 +896,7 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
     left: boxLeftPosition,
     width: boxWidth,
     height: `${h}%`,  
-    backgroundColor: colour,
+    backgroundColor:disabled ?'rgba(200, 0, 0, 0.08)' : colour,
     color: '#dddbdc',
     border: '1.5px solid black',
     borderRadius: '5px'
@@ -911,10 +920,10 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
   const OverFlowBoxStyles = {
     position: 'absolute',
     top: boxTopPosition ,
-    left: `${0 * w + 6 }%`,
+    left: `${0 * w + 1.5 }%`,
     width: overFlowWidth,
     height: `${h}%`,  
-    backgroundColor: colour, 
+    backgroundColor: disabled ? 'rgba(200, 0, 0, 0.08)' : colour, 
     border: '1.5px solid black',
     color: '#dddbdc',
     borderRadius: '5px'
@@ -925,7 +934,7 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
     }
 
   }}>
-    <div style={boxStyles}> {textInMainBox && plant.plantName} </div>
+    {(widthInWeeks - weekFiveIndex) > 0 && <div style={boxStyles}> {textInMainBox && plant.plantName} </div>}
     {showOverFlowBox && <div style={OverFlowBoxStyles}> {!textInMainBox && plant.plantName}  </div>}
   </div>;
 };
