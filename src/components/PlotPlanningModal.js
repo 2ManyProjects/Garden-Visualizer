@@ -536,7 +536,9 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
             }
             if(relavent){
               return (
-                <svg width={successionPlant.crownSpread} height={successionPlant.crownSpread} x={successionPlant.x - successionPlant.crownSpread} y={successionPlant.y - successionPlant.crownSpread}
+                <svg 
+                x={successionPlant.x - (successionPlant.crownSpread)} 
+                y={successionPlant.y - successionPlant.crownSpread} 
                 onMouseDown={(e) =>{  
                   plantMouseDown(e, index);
                   // e.preventDefault();
@@ -547,13 +549,21 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
                   // e.preventDefault();
                   // e.stopPropagation();
                 }}>
-                  <circle 
-                      cx={successionPlant.crownSpread / 2}
-                      cy={successionPlant.crownSpread / 2}
-                      r={successionPlant.crownSpread / 2}  
-                      // r={50}  
-                      fill={successionPlant.colour? successionPlant.colour : "#9CCC65"} 
-                    /></svg> 
+                  <circle
+                        cx={successionPlant.crownSpread / 2 + 2}
+                        cy={successionPlant.crownSpread / 2 + 2}
+                        r={successionPlant.crownSpread / 2 + 1}  
+                        // r={50}  
+                        fill={ "#000000"} /> 
+
+                <circle 
+                    cx={successionPlant.crownSpread / 2 + 2}
+                    cy={successionPlant.crownSpread / 2 + 2}
+                    r={successionPlant.crownSpread / 2}  
+                    // r={50}  
+                    fill={successionPlant.colour? successionPlant.colour : "#9CCC65"} 
+                  />
+                </svg> 
               )
             }else {
               return null;
