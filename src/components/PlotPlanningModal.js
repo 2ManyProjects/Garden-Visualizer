@@ -8,7 +8,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { SwatchesPicker } from 'react-color'
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import { v4 as uuidv4 } from 'uuid';
-import {isWindows, isLinux, isApple} from '../utils/PlatForm'
+import {isWindows, isLinux, isApple, isFirefox} from '../utils/PlatForm'
 
 
 const initialPlants = [
@@ -319,6 +319,8 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     }
     if(placeAble.length > 0)
       setChosenPlant(placeAble[0])
+    else
+      setChosenPlant(null)
     setPlaceablePlants(placeAble)
 
     // console.log(selectedWeekIndex,placeAble, );
@@ -460,11 +462,15 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     svgPoint.x = clientX;
     svgPoint.y = clientY;
     const transformedPoint = svgPoint.matrixTransform(svgElement.getScreenCTM().inverse());
-    if(isLinux() ){
+    const { width, height } = svgElement.getBoundingClientRect();
+    if(isFirefox() ){
+      // console.log(width, svgElement.width.baseVal.value)
       transformedPoint.x += svgElement.width.baseVal.value * 1.1 ;
       transformedPoint.y += svgElement.height.baseVal.value * 0.83;
+      // transformedPoint.x += width ;
+      // transformedPoint.y += height ;
     }
-    return { x: transformedPoint.x, y: transformedPoint.y };
+    return { x: transformedPoint.x , y: transformedPoint.y };
   };
   function calculateDistance(point1, point2) {
     const pxm = pixelsPerMeter;
@@ -548,7 +554,8 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
                   <circle 
                       cx={successionPlant.crownSpread / 2}
                       cy={successionPlant.crownSpread / 2}
-                      r={successionPlant.crownSpread / 2}  
+                      // r={successionPlant.crownSpread / 2}  
+                      r={50}  
                       fill={successionPlant.colour? successionPlant.colour : "#9CCC65"} 
                     /></svg> 
               )

@@ -21,6 +21,9 @@ const isApple = () => {
     }
     return  /iPad|iPhone|iPod/.test(navigator.userAgent) || /Mac/.test(navigator.userAgent);
 };
+const isFirefox = () => { 
+    return navigator.userAgent.indexOf("Firefox") > -1;
+};
 
 
-export {isWindows, isLinux, isApple}
+export {isWindows, isLinux, isApple, isFirefox}
