@@ -460,7 +460,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     svgPoint.x = clientX;
     svgPoint.y = clientY;
     const transformedPoint = svgPoint.matrixTransform(svgElement.getScreenCTM().inverse());
-    if(isLinux() || isApple()){
+    if(isLinux() ){
       transformedPoint.x += svgElement.width.baseVal.value * 1.1 ;
       transformedPoint.y += svgElement.height.baseVal.value * 0.83;
     }
