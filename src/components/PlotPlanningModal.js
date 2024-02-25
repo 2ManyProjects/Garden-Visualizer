@@ -150,6 +150,8 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
   // Function to add a new plant
   const handleStopPlant = () => {
     setSelectedPlant(null);
+    setYield(null);
+    setChosenPlant(null);
   };
 
   const saveSuccessionAndTransition = () => {
