@@ -148,8 +148,8 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
     };
 
   // Function to add a new plant
-  const handleAddPlant = () => {
-    setSelectedPlant({...chosenPlant, chosenYieldIndex: yeild, crownSpread: calculateCrownSpread(chosenPlant.crownSpread)});
+  const handleStopPlant = () => {
+    setSelectedPlant(null);
   };
 
   const saveSuccessionAndTransition = () => {
@@ -199,7 +199,10 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
                 pl.id = uuidv4();
                 pl.chosenYieldIndex = 0;
                 // console.log("pl")
+                
+                setYield(0)
                 setChosenPlant(pl)
+                setSelectedPlant({...pl, chosenYieldIndex: 0, crownSpread: calculateCrownSpread(pl.crownSpread)});
               }
             } 
             >
@@ -217,7 +220,10 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
               sx={{maxWidth: 100}}
               value={yeild != null ? chosenPlant.yieldStructureArray[yeild].itemHarvested :  ''}
               onChange={(e) =>{  
-                setYield( chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value))}} 
+                setYield( chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value))
+                
+                setSelectedPlant({...chosenPlant, chosenYieldIndex: chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value), crownSpread: calculateCrownSpread(chosenPlant.crownSpread)});
+              }} 
             >
               {chosenPlant.yieldStructureArray?.map((yeild, index) => (
                 <MenuItem key={yeild.yieldId} value={yeild.itemHarvested}>
@@ -225,8 +231,8 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
                 </MenuItem>
               ))}
             </Select>}
-            {chosenPlant && yeild != null  && <Button variant="contained" onClick={handleAddPlant} >
-            Add Plant
+            {chosenPlant && yeild != null  && selectedPlant &&  <Button variant="contained" onClick={handleStopPlant} >
+            Stop Planting
             </Button>}
           </Box>
           <Box>
@@ -550,15 +556,15 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
                   // e.stopPropagation();
                 }}>
                   <circle
-                        cx={successionPlant.crownSpread / 2 + 2}
-                        cy={successionPlant.crownSpread / 2 + 2}
+                        cx={successionPlant.crownSpread / 2 + 1.07}
+                        cy={successionPlant.crownSpread / 2 + 1.07}
                         r={successionPlant.crownSpread / 2 + 1}  
                         // r={50}  
                         fill={ "#000000"} /> 
 
                 <circle 
-                    cx={successionPlant.crownSpread / 2 + 2}
-                    cy={successionPlant.crownSpread / 2 + 2}
+                    cx={successionPlant.crownSpread / 2 + 1.07}
+                    cy={successionPlant.crownSpread / 2 + 1.07}
                     r={successionPlant.crownSpread / 2}  
                     // r={50}  
                     fill={successionPlant.colour? successionPlant.colour : "#9CCC65"} 

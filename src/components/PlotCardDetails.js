@@ -171,7 +171,7 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
         <CardActions>
           <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
             <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-              <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Stop Adding' : 'Add Points'}</Button>
+              <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Done' : 'Add Points'}</Button>
               <Button size="small" onClick={handleClearMeasurement}>Clear</Button>
             </Box> 
             {/* <Box sx={{display: 'flex', flexDirection: 'row'}}>
