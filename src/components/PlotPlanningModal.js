@@ -378,6 +378,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
       });
     }
   };
+
   const handleMeasurementMouseDown = (event) => { 
     // console.log("evt")
     if(event.button === 1){ 
@@ -388,6 +389,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
       });
     }
   };
+
   const handleMeasurementMouseUp = (event) => {
     if(selectedPlantIndex !== null){
       setSelectedPlantIndex(null)
@@ -401,6 +403,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     }else if(event.button === 1)
       setIsDragging(false);
   };
+
   const plantMouseDown = (event, index) => { 
     if(event.button === 0)
       setSelectedPlantIndex(index)  
@@ -474,6 +477,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     }
     return { x: transformedPoint.x , y: transformedPoint.y };
   };
+
   function calculateDistance(point1, point2) {
     const pxm = pixelsPerMeter;
      
@@ -486,7 +490,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
   const viewBoxStr = `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`; 
 
   return (
-    <Paper style={{ width: '100%', overflowX: 'auto', overflowY: 'auto', padding: '1rem' }}>
+    <Box style={{ width: '100%', overflowY: 'hidden',  padding: '1rem' }}>
       <Typography variant="h5" align="center" gutterBottom>
         Garden Calendar
       </Typography>
@@ -608,7 +612,7 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
         </svg>
             
       </Box> 
-    </Paper>
+    </Box>
   );
 };
 
@@ -699,7 +703,7 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
     setRows(prevRows => [...prevRows, []]);
   };
   return (
-    <Paper style={{ width: '100%', overflowX: 'auto', padding: '1rem' }}>
+    <Box style={{ width: '100%', overflowY: 'hidden',  padding: '1rem' }}>
       <Typography variant="h5" align="center" gutterBottom>
         Garden Calendar
       </Typography>
@@ -777,7 +781,7 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
           Add Row
         </Button>
       </Box> 
-    </Paper>
+    </Box>
   );
 };
 
