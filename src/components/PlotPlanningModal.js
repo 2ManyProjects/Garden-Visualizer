@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { SwatchesPicker } from 'react-color'
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import { v4 as uuidv4 } from 'uuid';
+import {isWindows, isLinux, isApple} from '../utils/PlatForm'
 
 
 const initialPlants = [
@@ -459,8 +460,10 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     svgPoint.x = clientX;
     svgPoint.y = clientY;
     const transformedPoint = svgPoint.matrixTransform(svgElement.getScreenCTM().inverse());
-    transformedPoint.x += svgElement.width.baseVal.value * 1.1 ;
-    transformedPoint.y += svgElement.height.baseVal.value * 0.83;
+    if(isLinux() || isApple()){
+      transformedPoint.x += svgElement.width.baseVal.value * 1.1 ;
+      transformedPoint.y += svgElement.height.baseVal.value * 0.83;
+    }
     return { x: transformedPoint.x, y: transformedPoint.y };
   };
   function calculateDistance(point1, point2) {
