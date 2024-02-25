@@ -810,8 +810,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
 
       if(selectedMeasurement && selectedMeasurement.selectedWidget === "measurementMove"){
 
-        svg = e.currentTarget;
-        // console.log(typeof e.currentTarget, Object.keys(e.currentTarget), e.currentTarget)
+        svg = e.currentTarget; 
         pt = svg.createSVGPoint();
         pt.x = e.clientX;
         pt.y = e.clientY;
@@ -840,6 +839,12 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         measurement.points = measurement?.points.map((point, index) => {
           return { x: point.x + offsetX, y: point.y + offsetY };
         });
+
+        if(measurement?.planningData?.plants && measurement?.planningData?.plants.length > 0){
+          measurement.planningData.plants = measurement?.planningData?.plants.map(p => {
+            return {...p, x: p.x + offsetX, y: p.y + offsetY }
+          })
+        }
 
         measurement.initOffset = {
           ...measurement.initOffset ,
