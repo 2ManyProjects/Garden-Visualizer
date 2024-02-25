@@ -150,12 +150,20 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
               setShowShadows(!showShadows)
             }}
         />}
+
+      <Box>
+        {gardenAnalysis && (gardenAnalysis.nReq.toFixed(2) !== "0.00" || gardenAnalysis.kReq.toFixed(2) !== "0.00") && <Box>
           
-        <text x={'1vw'} y={'13vh'} fontWeight="bold">
-          {areaStr}
-        </text>
+          <Typography fontSize={13} >
+            {areaStr}
+          </Typography>
+          <Typography fontSize={13}>{`N: ${gardenAnalysis.nReq.toFixed(2)}g`}</Typography>  
+          <Typography fontSize={13}>{`K: ${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
+          
+        </Box>}
       </Box>
-      <Box sx={{flexDirection: 'row', justifyContent: 'center', height: '100%'}} >
+      </Box>
+      <Box sx={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}> 
         <FormControl sx={{paddingRight: 2,}}>
           <InputLabel>Unit</InputLabel>
           <Select sx={{maxHeight: 50, width: '5vw'}}value={unit} onChange={(e) => setUnit(e.target.value)}>
@@ -184,25 +192,16 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
             
           </Select>
         </FormControl> }
-        {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />}  
+        {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />}   
 
-        <FormControl sx={{flexDirection: 'row', justifyItems: 'center', alignSelf: 'center', height: '100%', paddingTop: 1}}>
-          {selectedPlant && <Button onClick={handleOpen}>Plant Config</Button>}
-          <Button onClick={toggleEdit}>{isEditing ? '- Points' : '+ Points'}</Button>
-          <Button sx={{color: 'red'}} onClick={() => {
-            clearGarden(true)
-            setTimeout(() => { clearGarden(false)}, 50)
-            }}>DELETE</Button>
-        </FormControl>
+        {selectedPlant && <Button onClick={handleOpen}>Plant Config</Button>}
+        <Button onClick={toggleEdit}>{isEditing ? 'Done' : '+ Points'}</Button>
+        <Button sx={{color: 'red'}} onClick={() => {
+          clearGarden(true)
+          setTimeout(() => { clearGarden(false)}, 50)
+          }}>DELETE</Button> 
       </Box>
 
-      <Box>
-        {gardenAnalysis && (gardenAnalysis.nReq.toFixed(2) !== "0.00" || gardenAnalysis.kReq.toFixed(2) !== "0.00") && <Box>
-          <Typography>{`N: ${gardenAnalysis.nReq.toFixed(2)}g`}</Typography>  
-          <Typography>{`K: ${gardenAnalysis.kReq.toFixed(2)}g`}</Typography>  
-          
-        </Box>}
-      </Box>
       <Box sx={{ paddingTop: 1}}>
         {currentSession?.data?.coords?.lat && <Button onClick={() => setOpenHeightMap(!openHeightMap)}>HeightMap</Button>}
         <Button onClick={() => setOpenFeedBackModal(true)}>Feedback</Button>

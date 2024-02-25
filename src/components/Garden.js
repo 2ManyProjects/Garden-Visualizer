@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo, useLayoutEffect} from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import FloatingToolbar from './FloatingToolbar';
@@ -6,12 +6,9 @@ import { setAllPlantData, setCurrentSession, setPlantsInGarden, setSelectedPlant
 import SaveLoadModal from "./SaveLoadModal"
 import { Typography, Box, Modal, IconButton, Card, CardActions, CardContent, Button, TextField, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import SunCalc from 'suncalc'
-import mapboxgl from 'mapbox-gl';
-import {MapModal} from './EnvironmentalDataModal'
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Map, {Source, Layer} from 'react-map-gl';
-import Slider from '@mui/material/Slider';
 import MeasurementList from './MeasurementList';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import { SwatchesPicker } from 'react-color'
@@ -19,8 +16,8 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import CloseIcon from '@mui/icons-material/Close';
-import useDeepCompareEffect from '../utils/useDeepCompareEffect';
-import { useLayoutEffect } from 'react';
+import PlantCardDetails from './PlantCardDetails';
+import PlotCardDetails from './PlotCardDetails';
 
 let mapAccessToken = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1c3p5ZjAwcmYycW56bXdvcm5wcnkifQ.bAzhy4X_Fvbb53LuvgGJ5w' : 'pk.eyJ1Ijoiam9uZG8zIiwiYSI6ImNscTI1cWVicTAwcXgyam80MGl4bm1ldXIifQ.qRpd5YlDJx7cpilf_AvXEg';
 const conversionFactors = {
@@ -66,41 +63,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     setLastSelectedPlant(null)
   }, [selectedPermRole, selectedPlants, selectedPlant])
     
-  // useEffect(() => {
-  //   if (openHeightMap) {
-  //     setTimeout(() => {
-
-  //     // console.log(location?.lat || session?.data?.coords?.lat, location?.lon || session?.data?.coords?.lon);
-  //     map = new mapboxgl.Map({
-  //       container: 'map-container',
-  //       style: 'mapbox://styles/mapbox/outdoors-v11',
-  //       center: [currentSession?.data?.coords?.lon,  currentSession?.data?.coords?.lat],
-  //       zoom: 13,
-        
-  //     });
-
-  //     map.on('load', () => {
-  //       map.addSource('mapbox-dem', {
-  //         'type': 'raster-dem',
-  //         'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-  //         'tileSize': 512,
-  //         'maxzoom': 15
-  //       });
-  //       map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-        
-  //     });
-  //     }, 50)
-  //   }else {
-  //     if(map)
-  //       map.remove();
-  //   }
-
-  //   return () => {
-  //     if (map) {
-  //       map.remove();
-  //     }
-  //   };
-  // }, [openHeightMap,  currentSession?.data?.coords?.lat, currentSession?.data?.coords?.lon]);
+  
   const svgRef = useRef();
   useEffect(() => {
     setPoints([]);
@@ -134,19 +97,34 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       return parseFloat(newScale.toFixed(5));
     });
   }, [setScale, viewBox, setViewBox]);
+ 
 
-  const renderGridLines = (gridLines) => {
-    return gridLines.map((line, index) => (
-      <line
-        key={index}
-        x1={line.x1}
-        y1={line.y1}
-        x2={line.x2}
-        y2={line.y2}
-        stroke="lightgray"
-        strokeWidth="0.5"
-      />
-    ));
+
+  const handleWheel = (event) => {
+    const scale = 0.1; // Determine the scale of zoom
+    const delta = event.deltaY * 0.01; // Normalizing the wheel speed
+
+    // Calculate the new width and height
+    const newWidth = viewBox.width * (1 + delta * scale);
+    const newHeight = viewBox.height * (1 + delta * scale);
+
+    // Calculate the new X and Y based on the mouse position to zoom into the cursor point
+    const rect = event.currentTarget.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left; // Mouse X position within the element
+    const mouseY = event.clientY - rect.top;  // Mouse Y position within the element
+
+    // Adjust the viewBox position by the same proportion as the width/height
+    const dx = ((viewBox.width - newWidth) / viewBox.width) * (mouseX / rect.width);
+    const dy = ((viewBox.height - newHeight) / viewBox.height) * (mouseY / rect.height);
+
+    setViewBox(prevViewBox => ({
+      x: prevViewBox.x + dx,
+      y: prevViewBox.y + dy,
+      width: newWidth,
+      height: newHeight
+    }));
+    event.stopPropagation();
+    event.preventDefault();
   };
 
   
@@ -1327,536 +1305,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     marginBottom: '4px',
   }; 
 
-
-  const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement, isInsidePolygon, plantsInGarden, plantMacros}) => {
-    const [nutrientReq, setNutrientReq] = useState({ kReq: 0, nReq: 0 });
-
-    const [open, setOpen] = useState(false);
-    const [colour, setColour] = useState(null);
-    const [showColourPicker, setShowColourPicker] = useState(false);
-    const [newName, setNewName] = useState('');
-
-
-    // useEffect(() => {
-    //   // console.log("ONMOUNT")
-    //   nutrientAnalysis();
-    // }, [selectedMeasurement?.points, plantsInGarden])
-
-    useLayoutEffect(() => {
-      nutrientAnalysis();
-      
-    }, [])
-
-    function truncateString(str, num) {
-      if (str.length > num) {
-        return str.slice(0, num) + "...";
-      } else {
-        return str;
-      }
-    }
-    function nutrientAnalysis() {
-
-      if(selectedMeasurement?.points.length > 0 && plantsInGarden.length > 0){
-        let plantList = []
-        console.log("nutrient calc")
-        for(let x = 0; x < plantsInGarden?.length; x++){
-          let plant = plantsInGarden[x];
-          if(isInsidePolygon({ x: plant.x, y: plant.y }, selectedMeasurement?.points)){
-            plantList.push(plant);
-          }
-        }
-
-
-        let analysisData = {
-          kReq: 0,
-          nReq: 0
-        };
-      // console.log("plantsInGarden Change");
-        if(plantMacros){
-          // console.log("plantMacros", plantMacros);
-          for(let  x = 0; x < plantList.length; x++){
-            let plant = plantList[x];
-            if(plant.nutrientCalc !== null && plant.nutrientCalc === false){
-              continue;
-            }
-            let crownArea = Math.PI * (Math.pow( plant.crownDia , 2));
-            let macro = plantMacros?.plantMacroRequirements[plant.cropType];
-            // console.log(macro, plant)
-            if(macro?.nReq){
-              let nLoad = crownArea * parseFloat(macro.nReq);
-              analysisData.nReq += nLoad;
-            }
-            if(macro?.kReq){
-              let kLoad = crownArea * parseFloat(macro.kReq);
-              analysisData.kReq += kLoad;
-            }
-            setNutrientReq(analysisData);
-            // console.log(analysisData)
-          }
-        }
-        //isInsidePolygon({ x: selPlant.x, y: selPlant.y }, points)
-      }
-    }
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-    const handleConfirm = () => {
-      let measurement = selectedMeasurement;
-      measurement.name = newName;
-      // console.log(measurement);
-      setMeasurementList(list => list.map(item => {
-          if(item.id === measurement.id){
-              return measurement;
-          }else {
-              return item;
-          }
-  
-      }))
-      setSelectedMeasurement(measurement);
-      handleClose();
-    };
-  
-    
-    return (
-      <Box sx={{ 
-        // pointerEvents: 'none',
-        position: 'fixed', 
-        left: '80vw',
-        top: '56vh', 
-      }}> 
-       {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
-
-      <Card variant="outlined" sx={{ width: '20vw',height: '35vh'}}>
-        <CardContent>
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'  }}>
-              <IconButton fontSize='small' onClick={() => {setSelectedMeasurement(null)}} color="success">
-                <CloseIcon />
-              </IconButton>
-
-          </Box>
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'  }}> 
-            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-              Plot Details
-            </Typography> 
-
-          </Box>
-          {/* {selectedMeasurement?.id && <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {selectedMeasurement?.id }
-          </Typography>} */}
-          
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
-            {selectedMeasurement?.name &&  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {truncateString(selectedMeasurement?.name, 15) }
-          </Typography>}
-
-              <IconButton onClick={() => handleOpen(true)} color="success">
-                <DriveFileRenameOutlineIcon />
-              </IconButton>
-          </Box> 
  
-        {nutrientReq && (nutrientReq.nReq.toFixed(2) !== "0.00" || nutrientReq.kReq.toFixed(2) !== "0.00") && <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-          <Typography>{`N: ${nutrientReq.nReq.toFixed(2)}g `}</Typography>  
-          <Typography>{` K: ${nutrientReq.kReq.toFixed(2)}g`}</Typography>  
-          
-        </Box>} 
-          {/* {console.log(selectedMeasurement)} */} 
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
-            {selectedMeasurement?.colour?.rgbString &&
-              <Box sx={{ marginLeft: `1vw`, width: '5vw', height: 20,  backgroundColor: selectedMeasurement.colour.rgbString, border: '1px solid black'}}> </Box>}
-
-              <IconButton onClick={() => setShowColourPicker(true)} color="success">
-                <ColorLensIcon />
-              </IconButton>
-          </Box> 
-
-          {selectedMeasurement?.points.length > 2 && <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-            <Typography sx={{ fontSize: 14 }} color="text.secondary">
-              {` ${((calculatePolygonArea(selectedMeasurement.points) / (pixelsPerMeter * pixelsPerMeter) ) * (conversionFactors[gardenDimensions.unit] * conversionFactors[gardenDimensions.unit])).toFixed(2)} sq ${gardenDimensions.unit}`}
-            </Typography>
-          </Box>}
-        </CardContent>
-        <CardActions>
-          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-            <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-              <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Stop Adding' : 'Add Points'}</Button>
-              <Button size="small" onClick={handleClearMeasurement}>Clear</Button>
-            </Box> 
-            {/* <Box sx={{display: 'flex', flexDirection: 'row'}}>
-              <Button size="small" onClick={nutrientAnalysis}>Analyse Nutrients</Button>
-            </Box> */}
-            <Box sx={{display: 'flex', flexDirection: 'row'}}>
-              <Button size="small" onClick={handleDeleteMeasurement}>Delete Plot</Button>
-            </Box>
-          </Box>
-        </CardActions>
-          
-        </Card>
-
-        <Modal
-          open={showColourPicker}
-          onClose={()=> setShowColourPicker(false)}
-          aria-labelledby="colour-modal"
-          aria-describedby="colour-modal-description"
-        >
-          <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              boxShadow: 24,
-              p: 4,
-          }}>
-            <SwatchesPicker onChangeComplete={(color) =>{setColour(color)}}/>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button onClick={()=> {
-                  setColour(null);
-                  setMeasurementColor(null);
-                  setShowColourPicker(false);
-                }}>Cancel</Button>
-              <Button onClick={()=> {
-                  setMeasurementColor(colour);
-                  setShowColourPicker(false);
-                }} sx={{ ml: 1 }}>Confirm</Button>
-            </Box>
-          </Box>
-        </Modal>
-
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="rename-modal"
-          aria-describedby="rename-modal-description"
-          sx={{zIndex: 100000}}
-        >
-          <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              boxShadow: 24,
-              p: 4,
-          }}>
-            <Typography id="rename-modal" variant="h6" component="h2">
-              Enter Measurement Plot Name
-            </Typography>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label="New Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newName}
-              onChange={(e) => {
-                e.stopPropagation();
-                setNewName(e.target.value);
-                e.preventDefault();
-              }}
-            />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button onClick={handleClose}>Cancel</Button>
-              <Button onClick={handleConfirm} sx={{ ml: 1 }}>Confirm</Button>
-            </Box>
-          </Box>
-        </Modal>
-      </Box>
-    )
-  }
-
-  const PlantCardDetails = ({selectedPlant, plantsInGarden}) => {
-    const [open, setOpen] = useState(false);
-    const [newName, setNewName] = useState('');
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-    const [crownSpread, setCrownSpread] = useState(selectedPlant?.crownDia || 0);
-    const [height, setHeight] = useState(selectedPlant?.height || 0);
-    const [shadow, setShadow] = useState(selectedPlant?.shadow || null );
-    const [nutrientCalc, setNutrientCalc] = useState(selectedPlant?.nutrientCalc  || null );
-    // console.log(selectedPlant);
-    useEffect(() => {
-      setCrownSpread(selectedPlant?.crownDia || '');
-      setHeight(selectedPlant?.height || '');
-      setNewName(selectedPlant?.nickname || '');
-    }, [selectedPlant]);
-
-    function validOrClose() {
-      let found = plantsInGarden.find(item => selectedPlant.id === item.id)
-      if(!found)
-        setLastSelectedPlant(null);
-    }
-    // console.log(selectedPlant);
-
-    function truncateString(str, num) {
-      if (str.length > num) {
-        return str.slice(0, num) + "...";
-      } else {
-        return str;
-      }
-    }
-    const handleConfirm = () => {
-      validOrClose();
-      let plant = {...selectedPlant};
-      plant.nickname = newName;
-      // console.log(measurement);
-
-        const newPlantsInGarden = plantsInGarden.map(item => {
-          if(item.id === plant.id){
-              let plantObj = {...plant, x: item.x, y: item.y}
-              plant = plantObj
-              return plant;
-          }else {
-              return item;
-          }
-
-      });
-      dispatch(setPlantsInGarden(newPlantsInGarden));
-      setLastSelectedPlant(plant);
-      handleClose();
-    }; 
-    const saveNutrientCalc = () => {
-      validOrClose();
-      let plant = {...selectedPlant};
-      plant.nutrientCalc = !nutrientCalc; 
-      setNutrientCalc(plant.nutrientCalc);
-      
-      const newPlantsInGarden = plantsInGarden.map(item => {
-        if(item.id === plant.id){
-            let plantObj = {...plant, x: item.x, y: item.y}
-            plant = plantObj
-            return plant;
-        }else {
-            return item;
-        }
-
-    });
-      dispatch(setPlantsInGarden(newPlantsInGarden));
-      setLastSelectedPlant(plant);
-    }
-    const saveShadow = () => {
-      console.log('saveShadow');
-      validOrClose();
-      let plant = {...selectedPlant};
-      plant.shadow = !shadow; 
-      console.log(!shadow)
-      const newPlantsInGarden = plantsInGarden.map(item => {
-          if(item.id === plant.id){
-              let plantObj = {...plant, x: item.x, y: item.y}
-              plant = plantObj
-              return plant;
-          }else {
-              return item;
-          }
-
-      });
-      setShadow(plant.shadow);
-      dispatch(setPlantsInGarden(newPlantsInGarden));
-      setLastSelectedPlant(plant);
-    }
-
-    const saveCrownSpread = (crownSpread) => {
-      validOrClose();
-      let plant = {...selectedPlant};
-      plant.crownSpread = calculateCrownSpread(crownSpread, gardenDimensions);
-      plant.crownDia = crownSpread; 
-
-      
-      const newPlantsInGarden = plantsInGarden.map(item => {
-        if(item.id === plant.id){
-            let plantObj = {...plant, x: item.x, y: item.y}
-            plant = plantObj
-            return plant;
-        }else {
-            return item;
-        }
-
-    });
-      dispatch(setPlantsInGarden(newPlantsInGarden));
-      setLastSelectedPlant(plant);
-    }
-
-    const saveHeight = (height) => {
-      validOrClose();
-      let plant = {...selectedPlant};
-      plant.height = height;
-      // console.log(measurement);
-
-      
-      const newPlantsInGarden = plantsInGarden.map(item => {
-        if(item.id === plant.id){
-            let plantObj = {...plant, x: item.x, y: item.y}
-            plant = plantObj
-            return plant;
-        }else {
-            return item;
-        }
-
-    });
-      dispatch(setPlantsInGarden(newPlantsInGarden));
-      setLastSelectedPlant(plant);
-    }
-    
-    let floatRegex = /^-?\d+(\.\d*)?$/;
-    return (
-      <Box sx={{ 
-        // pointerEvents: 'none',
-        position: 'fixed', 
-        left: '0vw',
-        top: '30vh', 
-      }}> 
-       {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
-
-      <Card variant="outlined" sx={{ width: '20vw',height: '50vh', overflowY: 'scroll',}}>
-        <CardContent>
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end'  }}>
-              <IconButton fontSize='small' onClick={() => {setLastSelectedPlant(null)}} color="success">
-                <CloseIcon />
-              </IconButton>
-
-          </Box>
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'  }}> 
-            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-             {` ${selectedPlant?.latin|| ""}`}
-            </Typography> 
-
-          </Box>
-          
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
-              {selectedPlant?.name &&  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-              {truncateString(selectedPlant?.name, 15) }
-            </Typography>}
-          </Box> 
-          
-          
-          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}> 
-              {selectedPlant?.nickname &&  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-              {truncateString(selectedPlant?.nickname, 15) }
-            </Typography>}
-
-            <IconButton onClick={() => {validOrClose(); handleOpen(true)}} color="success">
-              <DriveFileRenameOutlineIcon />
-            </IconButton>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', justifyContent: 'center' }}>
-            <TextField
-              label="Crown Spread (m)"
-              variant="outlined"
-              value={crownSpread}
-              onChange={(e) => {
-                if((floatRegex.test(e.target.value)))
-                setCrownSpread(e.target.value)}}
-              inputProps={{
-                onBlur: () => {
-                    saveCrownSpread(crownSpread);
-                }
-             }}
-            />
-            <TextField
-              label="Height (m)"
-              variant="outlined"
-              value={height}
-              onChange={(e) => {
-                
-                if((floatRegex.test(e.target.value)))
-                setHeight(e.target.value)}} 
-              inputProps={{
-                onBlur: () => {
-                  saveHeight(height)
-                },  
-              }
-            }
-            />
-          </Box> 
-          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-      <ToggleButtonGroup exclusive>
-        <ToggleButton
-          value="shadow"
-          selected={shadow === null ? true : shadow}
-          onClick={()=>{
-            console.log("shade")
-            saveShadow();
-          }}
-          sx={{ m: 1 }}
-        >
-          Shadow
-        </ToggleButton>
-        <ToggleButton
-          value="nutrientCalc"
-          selected={nutrientCalc === null ? true : nutrientCalc}
-          onClick={()=>{
-            console.log("saveNutrientCalc")
-            saveNutrientCalc();
-          }} 
-          sx={{ m: 1 }}
-        >
-          Nutrient Calc
-        </ToggleButton>
-      </ToggleButtonGroup>
-      </Box>
-          
-        </CardContent>
-        <CardActions>
-          <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-            
-            <Box sx={{display: 'flex', flexDirection: 'row'}}>
-              <Button size="small" onClick={() => {
-                validOrClose(); 
-                dispatch(setPlantsInGarden(plantsInGarden.filter((plant, i) => plant.id !== selectedPlant.id)))
-              }}>Delete Plant</Button>
-            </Box>
-          </Box>
-        </CardActions>
-          
-      </Card>
-
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="rename-modal"
-          aria-describedby="rename-modal-description"
-          sx={{zIndex: 100000}}
-        >
-          <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 400,
-              bgcolor: 'background.paper',
-              boxShadow: 24,
-              p: 4,
-          }}>
-            <Typography id="rename-modal" variant="h6" component="h2">
-              Enter Plant Nickname
-            </Typography>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label="New Nickname"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newName}
-              onChange={(e) => {
-                e.stopPropagation();
-                setNewName(e.target.value);
-                e.preventDefault();
-              }}
-            />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button onClick={handleClose}>Cancel</Button>
-              <Button onClick={handleConfirm} sx={{ ml: 1 }}>Confirm</Button>
-            </Box>
-          </Box>
-        </Modal>
-      </Box>
-    )
-  }
-
 
   return (
     <div style={{ position: 'relative', height: '100%'  }}onContextMenu={handleContextMenu}>
@@ -1928,6 +1377,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         ref={svgRef}
         width="100%"
         height="100%"
+        onWheel={handleWheel}
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
         style={{ border: '1px solid black', cursor: /*isEditing ? 'crosshair' : */'default', backgroundColor: 'rgba(127, 127, 127, 0.5)',  }}
         onClick={handleSvgClick}
@@ -2089,8 +1539,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       </Box>
     </Box>}
     {/* PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement}) */}
-   
-    {lastSelectedPlant && <PlantCardDetails selectedPlant={lastSelectedPlant} plantsInGarden={plantsInGarden}/>}
+    {lastSelectedPlant && <PlantCardDetails setLastSelectedPlant={setLastSelectedPlant} selectedPlant={lastSelectedPlant} plantsInGarden={plantsInGarden} calculateCrownSpread={calculateCrownSpread} gardenDimensions={gardenDimensions}/>}
     {selectedMeasurement && <PlotCardDetails 
       plantMacros={plantMacros}
       plantsInGarden={plantsInGarden}
@@ -2103,6 +1552,9 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       handleClearMeasurement={handleClearMeasurement}
       handleDeleteMeasurement={handleDeleteMeasurement}
       setSelectedMeasurement={setSelectedMeasurement} 
+      setMeasurementColor={setMeasurementColor}
+      pixelsPerMeter={pixelsPerMeter}
+      setMeasurementList={setMeasurementList}
     />}
         
     <FloatingToolbar 

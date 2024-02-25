@@ -1,13 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Select, MenuItem, Button, Box, Modal, TextField, Typography, Menu, IconButton } from '@mui/material'; 
+import React from 'react';
 
-import MenuList from '@mui/material/MenuList'; 
-import Paper from '@mui/material/Paper';
-import ListItemIcon from '@mui/material/ListItemIcon'; 
-  
-import DraftsIcon from '@mui/icons-material/Drafts';
-import SendIcon from '@mui/icons-material/Send';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 
 
 const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, handleMeasurementWidget, widgetWidth, setSelectedMeasurement }) => { 
@@ -74,8 +66,12 @@ const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjust
             return (
             <g key={index}>
                 <line x1={point.x} y1={point.y} x2={nextPoint.x} y2={nextPoint.y}/>
-                <text x={midX} y={midY} style={{ fontSize: `${adjustedFontSize}px` }}>
-                {distance}
+                <text x={midX} y={midY} style={{ 
+                    fontSize: `${adjustedFontSize}px` , 
+                    userSelect: 'none', 
+                    WebkitUserSelect: 'none', 
+                    msUserSelect: 'none'}}>
+                {distance}{gardenDimensions.unit}
                 </text>
             </g>
             );
