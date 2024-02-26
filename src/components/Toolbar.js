@@ -195,7 +195,7 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
         {selectedPlants?.length > 0 && <PlantIcons maxHeight={30} isPlantSelectorEnabled={isPlantSelectorEnabled} isEditing />}   
 
         {selectedPlant && <Button onClick={handleOpen}>Plant Config</Button>}
-        <Button onClick={toggleEdit}>{isEditing ? 'Done' : '+ Points'}</Button>
+        <Button onClick={toggleEdit}>{isEditing ? 'Done' : 'Add Points'}</Button>
         <Button sx={{color: 'red'}} onClick={() => {
           clearGarden(true)
           setTimeout(() => { clearGarden(false)}, 50)

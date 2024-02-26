@@ -1570,6 +1570,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       // curSesh.data.coords = {lat: coords.lat, lon: coords.lon};
       // storeSession();
     }}
+    isGardenDefined={points?.length > 2}
     showShadows={showShadows}
     setShowShadows={setShowShadows}
     session={currentSession}

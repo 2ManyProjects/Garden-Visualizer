@@ -12,7 +12,7 @@ import { EnvironmentalDataModal } from './EnvironmentalDataModal';
 import { SwatchesPicker } from 'react-color'
 
 
-const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows, setMeasurementColor}) => {
+const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows, setMeasurementColor, isGardenDefined}) => {
   const [isVisible, setIsVisible] = useState(true);  
   const [open, setOpen] = useState(false);
   const [colour, setColour] = useState(null);
@@ -190,7 +190,7 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
               </text>}
           </>
         )}
-        {!selectedMeasurement && (
+        {!selectedMeasurement && isGardenDefined && (
           <>
             <Button onClick={handleAddMeasurement}>Add Plot</Button>
           </>
