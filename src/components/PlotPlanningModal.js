@@ -754,11 +754,6 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
                   plant={data.plant}
                   rowIndex={data.selectedRow}
                   weekIndex={data.selectedWeekIndex}
-                  onDelete={() => {
-                    let temp = [...rows];
-                    temp[rowIndex].splice(index, 1);
-                    setRows(temp);
-                  }}
                   colour={'rgba(36, 147, 36, 0.08)'}/>
                 }))} 
                 {selectedPlant && (
@@ -954,9 +949,9 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
     borderRadius: '5px'
   };
   return <div  onMouseUp={(e) => {
-    if(e.button === 2 && onDelete){
-      onDelete();
-    }
+    // if(e.button === 2 && onDelete){
+    //   onDelete();
+    // }
 
   }}>
     {(widthInWeeks - weekFiveIndex) > 0 && <div style={boxStyles}> {textInMainBox && plant.plantName} </div>}
