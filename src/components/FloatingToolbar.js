@@ -144,46 +144,6 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
 
         {selectedMeasurement && (
           <>
-              {/* <Button onClick={handleAddRemovePoints}>
-                  {selectedMeasurement.addPoints ? '- Points' : '+ Points'}
-              </Button>  */}
-
-              {/* <Modal
-                open={showColourPicker}
-                onClose={()=> setShowColourPicker(false)}
-                aria-labelledby="colour-modal"
-                aria-describedby="colour-modal-description"
-              >
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 400,
-                    bgcolor: 'background.paper',
-                    boxShadow: 24,
-                    p: 4,
-                }}>
-                  <SwatchesPicker onChangeComplete={(color) =>{setColour(color)}}/>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Button onClick={()=> {
-                        setColour(null);
-                        setMeasurementColor(null);
-                        setShowColourPicker(false);
-                      }}>Cancel</Button>
-                    <Button onClick={()=> {
-                        setMeasurementColor(colour);
-                        setShowColourPicker(false);
-                      }} sx={{ ml: 1 }}>Confirm</Button>
-                  </Box>
-                </Box>
-              </Modal> */}
-
-
-              {/* <Button onClick={()=> setShowColourPicker(true)}>Set Colour</Button>
-              <Button onClick={handleClearMeasurement}>Clear</Button>
-              <Button onClick={handleDeleteMeasurement}>Delete</Button>
-              <Button onClick={handleOpen}> Rename</Button> */}
               {selectedMeasurement.points.length > 3 && 
               <text fontWeight="bold" style={{ marginLeft: 2 }}>
                   {`Area: ${calcArea(selectedMeasurement.points).toFixed(2)} sq ${gardenDimensions.unit}`}

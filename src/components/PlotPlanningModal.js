@@ -10,7 +10,7 @@ import ColorLensIcon from '@mui/icons-material/ColorLens';
 import { v4 as uuidv4 } from 'uuid';
 import {isWindows, isLinux, isApple, isFirefox} from '../utils/PlatForm'
 
-
+//https://farmwest.com/climate/calculator-information/et/crop-coefficients/
 const initialPlants = [
   {
     plantId: "001",
@@ -704,6 +704,18 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
   const addRow = () => {
     setRows(prevRows => [...prevRows, []]);
   };
+
+  const isPlantClicked = (data, week) => {
+
+    let widthInWeeks = calculatePosition(data.plant); 
+    if(data.selectedWeekIndex + widthInWeeks > 52){
+      let offSetWeeks = widthInWeeks - (data.selectedWeekIndex + widthInWeeks - 52); 
+      return week <= offSetWeeks || week >= data.selectedWeekIndex
+    }else { 
+      return week >= data.selectedWeekIndex && week <= (data.selectedWeekIndex + widthInWeeks)
+    }
+    
+  }
   return (
     <Paper style={{ width: '100%', position: 'relative', overflowY: 'auto',  padding: '1rem', height: '470px' }}>
       <Typography variant="h5" align="center" gutterBottom>
@@ -735,27 +747,6 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
                   </Grid>
                 )})}
               </Grid>
-                {rows.map((row, rowIndex) => 
-                {
-                  return<Grid container onMouseOver={()=> {{
-                    setSelectedRow(() => rowIndex)}}}>
-                    {Array.from({ length: month.weeks }, (_, weekIndex) => {
-                    let cumulativeWeeks = 0;
-                    for(let x = 0; x < index; x++){
-                      cumulativeWeeks +=  months[x].weeks;
-                    }
-                    cumulativeWeeks += weekIndex;
-                      
-                      return(
-                    <Grid item xs  key={weekIndex} style={{ textAlign: 'center', borderRight: '1px solid #ddd', borderBottom: '1px solid #ddd' }} onMouseOver={()=> setSelectedWeekIndex(cumulativeWeeks)}>
-                      <Typography variant="body2"  sx={{color: "rgba(100,100,100, 0)", 
-                      userSelect: 'none',  
-                      WebkitUserSelect: 'none',  
-                      msUserSelect: 'none'  }}>{weekIndex + 1}</Typography>
-                    </Grid>
-                  )})}
-                  </Grid> 
-                })}
                 {rows.map((row, rowIndex)=> row.map((data, index) =>{
                   return <FloatingPlantBox
                   months={months}
@@ -780,6 +771,40 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
                   weekIndex={selectedWeekIndex}
                   colour={'rgba(100, 100, 100, 0.08)'}/>
                 )}
+                {rows.map((row, rowIndex) => 
+                {
+                  return<Grid container  onMouseOver={()=> {{
+                    setSelectedRow(() => rowIndex)}}}>
+                    {Array.from({ length: month.weeks }, (_, weekIndex) => {
+                    let cumulativeWeeks = 0;
+                    for(let x = 0; x < index; x++){
+                      cumulativeWeeks +=  months[x].weeks;
+                    }
+                    cumulativeWeeks += weekIndex;
+                      
+                      return(
+                    <Grid item xs  key={weekIndex} style={{ textAlign: 'center', borderRight: '1px solid rgba(221, 221, 221, 0.5)', borderBottom: '1px solid rgba(221, 221, 221, 0.5)', zIndex: 5 }} onMouseOver={()=> setSelectedWeekIndex(cumulativeWeeks)}
+                    onMouseUp={(e) => {
+                      if(e.button === 2){
+                        console.log(rows[rowIndex]);
+                        if(isPlantClicked(rows[rowIndex][0], selectedWeekIndex )){
+                          let r = [...rows];
+                          r[rowIndex] = [];
+                          setRows(r)
+                        }
+                        // onDelete();
+                      }
+                  
+                    }}
+                    >
+                      <Typography variant="body2"  sx={{color: "rgba(100,100,100, 0)", 
+                      userSelect: 'none',  
+                      WebkitUserSelect: 'none',  
+                      msUserSelect: 'none'  }}>{weekIndex + 1}</Typography>
+                    </Grid>
+                  )})}
+                  </Grid> 
+                })}
             </Grid>
           ))}
         </Grid> 
@@ -914,7 +939,7 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
         break;
       }
     }
-    overFlowWidth = `${((calculatePosition(plant) - weekFiveIndex) - widthInWeeks) * w}%`;
+    overFlowWidth = `${((calculatePosition(plant) - weekFiveIndex) - (widthInWeeks)) * w  }%`;
   }
 
   const OverFlowBoxStyles = {
@@ -928,7 +953,7 @@ const FloatingPlantBox = ({ plant, rowIndex, weekIndex, colour, months, onDelete
     color: '#dddbdc',
     borderRadius: '5px'
   };
-  return <div onMouseUp={(e) => {
+  return <div  onMouseUp={(e) => {
     if(e.button === 2 && onDelete){
       onDelete();
     }

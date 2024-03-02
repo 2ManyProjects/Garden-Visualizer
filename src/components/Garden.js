@@ -1021,7 +1021,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
             <circle cx={radius} cy={radius} r={radius} />
           </clipPath>
         </defs>
-        {isLastSelected && <circle cx={radius} cy={radius} r={radius} fill='rgba(169, 173, 98, 1)' />}
+        {isLastSelected && <circle cx={radius} cy={radius} r={radius} fill='rgba(169, 173, 98, 0.75)' />}
         <ImageWithFallback
           imageUrl={imageUrl}
           radius={radius}
@@ -1044,9 +1044,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           cx={radius}
           cy={radius}
           r={radius}
-          clipPath={`url(#${clipPathId})`}
-          transform={`rotate(${rotation},${radius},${radius})`}
-          fill="#CCCCCC" 
+          fill='rgba(36, 147, 36, 0.75)' 
         />
       );
     }
@@ -1059,11 +1057,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         clipPath={`url(#${clipPathId})`}
         transform={`rotate(${rotation},${radius},${radius})`}
         onError={(e) => {
-          // console.log("ERR", e)
           setHasError(true)}}
-        // style={{
-        //   transformOrigin: transformOrigin
-        // }}
       />
     );
   }
@@ -1453,7 +1447,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         />
         
         {useMemo(() => renderPlants({lastSelectedPlant}), [lastSelectedPlant, plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
-        {/* {renderPlants()} */}
+        {/* {renderPlants({lastSelectedPlant})} */}
 
         {primaryLines.map((line, index) => (
           <line key={`primary-${index}`} style ={{opacity: '25%'}} {...line} stroke="black" strokeWidth={calculateStrokeWidth(scale)/ 2} />
