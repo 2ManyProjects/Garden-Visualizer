@@ -420,7 +420,7 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
     </Typography>
     
     <Box align="center"  style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}> 
-        <Typography variant="body2">mm/day</Typography>
+      <Typography variant="body2">mm/day</Typography>
       <Grid container justifyContent="center" >
         {months.map((month, index) => (
           <Grid item xs key={index} style={{ textAlign: 'center' }}>
