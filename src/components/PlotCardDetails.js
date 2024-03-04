@@ -92,7 +92,7 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
       setSelectedMeasurement(measurement);
       handleClose();
     };
-    const saveToMeasurement = (data) => {
+    const saveToMeasurement = (data, toClose = true) => {
       let measurement = selectedMeasurement;
       measurement.planningData = data;
       // console.log(measurement);
@@ -105,7 +105,8 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
   
       }))
       setSelectedMeasurement(measurement);
-      setOpenPlanning(false);
+      if(toClose)
+        setOpenPlanning(false);
     };
   
     

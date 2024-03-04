@@ -9,6 +9,12 @@ import { SwatchesPicker } from 'react-color'
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import { v4 as uuidv4 } from 'uuid';
 import {isWindows, isLinux, isApple, isFirefox} from '../utils/PlatForm'
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow'; 
 
 //https://farmwest.com/climate/calculator-information/et/crop-coefficients/
 const initialPlants = [
@@ -28,6 +34,11 @@ const initialPlants = [
         yieldSeasonEnd: "10-01",
         notes: "Can be harvested multiple times during the growing season."
       }
+    ],
+    growthStages: [
+      {stage: "Initial", kc: 0.75, defaultDays: 30, userDefinedDays: null},
+      {stage: "Mid-Season", kc: 1.2, defaultDays: 60, userDefinedDays: null},
+      {stage: "Late Season", kc: 0.95, defaultDays: 30, userDefinedDays: null}
     ]
   },
   {
@@ -46,6 +57,11 @@ const initialPlants = [
         yieldSeasonEnd: "09-01",
         notes: "Start indoors, transplant after last frost. Harvest until first frost."
       }
+    ],
+    growthStages: [
+      {stage: "Initial", kc: 0.8, defaultDays: 20, userDefinedDays: null},
+      {stage: "Mid-Season", kc: 1.1, defaultDays: 50, userDefinedDays: null},
+      {stage: "Late Season", kc: 0.95, defaultDays: 30, userDefinedDays: null}
     ]
   },
   {
@@ -64,6 +80,11 @@ const initialPlants = [
         yieldSeasonEnd: "08-20",
         notes: "Transplant or direct sow after last frost."
       }
+    ],
+    growthStages: [
+      {stage: "Initial", kc: 0.7, defaultDays: 10, userDefinedDays: null},
+      {stage: "Mid-Season", kc: 1.05, defaultDays: 40, userDefinedDays: null},
+      {stage: "Late Season", kc: 0.95, defaultDays: 20, userDefinedDays: null}
     ]
   },
 ];
@@ -117,6 +138,20 @@ const PlotPlanningModal = ({selectedMeasurement, open, closeModal, pixelsPerMete
 export default PlotPlanningModal
 
 const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors, gardenDimensions, saveToMeasurement}) => {
+  const months = [
+    { name: 'January', weeks: 5, eto: 1.00 },
+    { name: 'February', weeks: 4, eto: 2.00 },
+    { name: 'March', weeks: 4, eto: 3.00 },
+    { name: 'April', weeks: 4, eto: 4.00 },
+    { name: 'May', weeks: 5, eto: 5.00 },
+    { name: 'June', weeks: 4, eto: 6.00 },
+    { name: 'July', weeks: 5, eto: 7.00 },
+    { name: 'August', weeks: 4, eto: 7.00 },
+    { name: 'September', weeks: 4, eto: 5.00 },
+    { name: 'October', weeks: 5, eto: 3.00 },
+    { name: 'November', weeks: 4, eto: 2.00 },
+    { name: 'December', weeks: 4, eto: 1.00 }
+  ]; 
   // console.log(selectedMeasurement)
   const [plants, setPlants] = useState(initialPlants);
   const [plotPlants, setPlotPlants] = useState(selectedMeasurement?.planningData?.plants || []);
@@ -126,10 +161,12 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
   const [chosenPlant, setChosenPlant] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [plotSuccessionData, setPlotSuccessionData] = useState([])
+  const [eto, setETO] = useState(months.map(item => item.eto))
   // console.log(plotSuccessionData)
   const [stage, setStage] = useState(0);
   const [placeablePlants, setPlaceablePlants] = useState([]);
-
+  const [plantWaterData, setPlantWaterData]= useState([]);
+ 
   // useLayoutEffect(() => {
 
   // }, [])
@@ -168,11 +205,62 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
     setStage(1);
     setChosenPlant(null);
   }
+  const calcWaterUsage = () => {
+    let plantsToCalc = [];
+    for(let x = 0; x < rows.length; x++){
+      if(rows[x].length > 0){
+       plantsToCalc.push(rows[x][0])
+      }
+    }
+    // console.log(plantsToCalc)
+    let yearByWeek = [];
+    months.map((month, index) => {
+      Array.from({ length: month.weeks }, (_, weekIndex) => {
+        yearByWeek.push({name: month.name, eto: eto[index]})
+      })
+    })
+    // console.log(yearByWeek)
+    let plantWithWaterCalc = [];
+    for(let x = 0; x < plantsToCalc.length; x++){
+      let plant = plantsToCalc[x];
+      let stageWeeks = 0;
+      let kcIndexByWeek = [];
+      plant.plant.growthStages.map(item => {
+        let duration = Math.ceil((item.userDefinedDays || item.defaultDays) / 7)
+        for(let y = 0; y < duration; y++){
+          kcIndexByWeek.push(item.kc)
+        }
+        stageWeeks += duration
+        return item;
+      })
+      // console.log("Total Weeks", stageWeeks)
+      let plantWaterUsage = 0;
+      for(let i = plant.selectedWeekIndex; i < plant.selectedWeekIndex + stageWeeks; i++){
+        let kcIndex = (i % 52) - plant.selectedWeekIndex;
+        let plantRadius = plant.plant.orgCrownSpread / 2;
+        let weekWaterUsage = (kcIndexByWeek[kcIndex] * yearByWeek[(i % 52)].eto * ((plantRadius * plantRadius) * Math.PI )) * 7;
+        // console.log(kcIndex, kcIndexByWeek[kcIndex], yearByWeek[(i % 52)].eto, ((plantRadius * plantRadius) * Math.PI ) )
+        // console.log((kcIndexByWeek[kcIndex] * yearByWeek[(i % 52)].eto * ((plantRadius * plantRadius) * Math.PI )))
+        // console.log((kcIndexByWeek[kcIndex] * yearByWeek[(i % 52)].eto * ((plantRadius * plantRadius) * Math.PI )))
+        plantWaterUsage += weekWaterUsage;
+      }
+      plant.plant.waterUsageLiters = plantWaterUsage ;
+      let foundPlants = plotPlants.filter(item => item.id === plant.plant.id)
+      plant.plant.plannedPlantsWaterUsageLiters = ((plant.plant.waterUsageLiters) * foundPlants.length);
+      plantWithWaterCalc.push(plant.plant);
+      // console.log(plant.plant.plantName, plant.plant.plannedPlantsWaterUsageLiters)
+    }
+    // console.log(plantWithWaterCalc, plotPlants)
+    setPlantWaterData(plantWithWaterCalc);
+  }
 
   
   const handleDone = () => {
     let saveObj = {plants: plotPlants, successionData: rows}
-    saveToMeasurement(saveObj);
+    console.log(saveObj);
+    saveToMeasurement(saveObj, stage === 2 ? true : false);
+    if(stage !== 2)
+      setStage(2)
   }
   return (
     <div> 
@@ -204,7 +292,7 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
                 
                 setYield(0)
                 setChosenPlant(pl)
-                setSelectedPlant({...pl, chosenYieldIndex: 0, crownSpread: calculateCrownSpread(pl.crownSpread)});
+                setSelectedPlant({...pl, chosenYieldIndex: 0, orgCrownSpread: pl.crownSpread, crownSpread: calculateCrownSpread(pl.crownSpread)});
               }
             } 
             >
@@ -224,7 +312,7 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
               onChange={(e) =>{  
                 setYield( chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value))
                 
-                setSelectedPlant({...chosenPlant, chosenYieldIndex: chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value), crownSpread: calculateCrownSpread(chosenPlant.crownSpread)});
+                setSelectedPlant({...chosenPlant, chosenYieldIndex: chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value), orgCrownSpread: chosenPlant.crownSpread,crownSpread: calculateCrownSpread(chosenPlant.crownSpread)});
               }} 
             >
               {chosenPlant.yieldStructureArray?.map((yeild, index) => (
@@ -250,7 +338,7 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
           <GardenPlantingUI plotSuccessionData={plotSuccessionData} selectedMeasurement={selectedMeasurement} pixelsPerMeter={pixelsPerMeter} conversionFactors={conversionFactors} gardenDimensions={gardenDimensions} placeablePlants={placeablePlants} setPlaceablePlants={setPlaceablePlants} setChosenPlant={setChosenPlant} chosenPlant={chosenPlant} setMousePosition={setMousePosition} mousePosition={mousePosition} plotPlants={plotPlants} setPlotPlants={setPlotPlants}/>  
           
           {rows.length > 0 && <Box align="center"  style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}> 
-
+{/* {console.log(placeablePlants)} */}
           <Box align="center" style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
               <Select
                 sx={{maxWidth: 100}}
@@ -262,7 +350,7 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
                     return;
                   }
                   let pl = e.target.value; 
-                  pl.id = uuidv4(); 
+                  // pl.id = uuidv4(); 
                   setChosenPlant(pl)
                 }
               } 
@@ -270,11 +358,21 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
               {chosenPlant && <MenuItem key={-5} value={null}>
                 Deselect Plant
               </MenuItem>}
-                {placeablePlants?.map(plant => (
+                {placeablePlants?.map(plant => {
+                  let curMonth = months[0].name
+                  let wkIndex = plant.selectedWeekIndex;
+                  for(let x = 0; x < months.length; x++){
+                    curMonth = months[x].name;
+                    wkIndex -= months[x].weeks
+                    if(wkIndex <= 0)
+                      break;
+                  }
+
+                  return (
                   <MenuItem key={plant.id} value={plant}>
-                    {plant.plantName}
+                    {plant.plantName} | {curMonth}
                   </MenuItem>
-                ))}
+                )})}
               </Select>  
           </Box>
           <Box>
@@ -282,15 +380,116 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
             Back
             </Button>
             <Button variant="contained" onClick={handleDone} style={{ marginBottom: '1rem' }}>
-            Done
+            Next
             </Button>
           </Box>
             
         </Box>}
       </Box>}
-    </div>
-  );
-};
+        {stage === 2 &&
+        <Box>
+          <GardenWaterUsageUI months={months}  eto={eto}  setETO={setETO}  calcWaterUsage={calcWaterUsage}  plantWaterData={plantWaterData}  plotPlants={plotPlants} />
+          <Box align="center">
+              <Button variant="contained" onClick={()=> setStage(1)} style={{ marginBottom: '1rem' }}>
+              Back
+              </Button>
+              <Button variant="contained" onClick={handleDone} style={{ marginBottom: '1rem' }}>
+              Done
+              </Button>
+          </Box>
+        </Box>}
+      </div>
+    );
+  };
+
+
+const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData, plotPlants}) => {
+
+  useEffect(()=> {
+    calcWaterUsage();
+  }, [])
+
+  useEffect(()=> {
+    calcWaterUsage();
+  }, [eto])
+  console.log(plantWaterData, plotPlants);
+  return ( 
+    <Box style={{ width: '100%', overflowY: 'hidden',  padding: '1rem' }}>
+    <Typography variant="h5" align="center" gutterBottom>
+      Plot Water Management
+    </Typography>
+    
+    <Box align="center"  style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}> 
+      <Grid container justifyContent="center" >
+        {months.map((month, index) => (
+          <Grid item xs key={index} style={{ textAlign: 'center' }}>
+            <Typography variant="body2">{month.name}</Typography>
+            <Grid container sx={{paddingTop: '1vh'}}>
+              <TextField
+                type='number'
+                label={'ETo (mm/day)'}
+                value={eto[index]}
+                onChange={(e) => { 
+                  let temp = [...eto];
+                  temp[index] = parseFloat(e.target.value)
+                  setETO(temp)
+                }
+                } 
+              />     
+            </Grid>  
+          </Grid>
+        ))}
+      </Grid>  
+      {plantWaterData.length > 0 && <Box style={{ marginTop: '1rem' }}>
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">Plants / Init Month / Yield</TableCell>
+                <TableCell align="center">ID</TableCell>
+                <TableCell align="center">Quantity</TableCell>
+                <TableCell align="center">Crown Spread &nbsp;(m)</TableCell>
+                <TableCell align="center">Coverage &nbsp;(sqm)</TableCell>
+                <TableCell align="center">Total Water &nbsp;(L)</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {plantWaterData.map((row) => {
+                let quant = plotPlants.filter(item => item.id === row.id).length;
+                let plantRadius = row.orgCrownSpread / 2;
+                let plantCoverage = ((plantRadius * plantRadius) * Math.PI ) * quant;
+                let curMonth = months[0].name
+                let wkIndex = row.selectedWeekIndex;
+                for(let x = 0; x < months.length; x++){
+                  curMonth = months[x].name;
+                  wkIndex -= months[x].weeks
+                  if(wkIndex <= 0)
+                    break;
+                }
+                return (
+                <TableRow
+                  key={row.name}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell align="center" component="th" scope="row">
+                    {row.plantName} / {curMonth} / {row.yieldStructureArray[row.chosenYieldIndex].itemHarvested}
+                  </TableCell>
+                  <TableCell align="center">{row.id.split('-').pop()}</TableCell>
+                  <TableCell align="center">{quant}</TableCell>
+                  <TableCell align="center">{row.orgCrownSpread}</TableCell>
+                  <TableCell align="center">{plantCoverage.toFixed(1)}</TableCell>
+                  <TableCell align="center">{row.plannedPlantsWaterUsageLiters.toFixed(1)}</TableCell>
+                </TableRow>
+              )})}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>}
+      
+    </Box>
+  </Box>   
+    )
+}
 
 const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMeter, conversionFactors, gardenDimensions, placeablePlants, setPlaceablePlants, chosenPlant, setChosenPlant, setMousePosition, mousePosition, plotPlants, setPlotPlants}) => {
 
@@ -314,16 +513,19 @@ const GardenPlantingUI = ({plotSuccessionData, selectedMeasurement, pixelsPerMet
     for(let x = 0; x < plotSuccessionData.length; x++){
       let successionPlant = plotSuccessionData[x];
       if(selectedWeekIndex >= successionPlant.selectedWeekIndex && (successionPlant.selectedWeekIndex + successionPlant.widthInWeeks) >= selectedWeekIndex){
-        if( placeAble.findIndex(item => item.plantName === successionPlant.plant.plantName)=== -1){
+        if( placeAble.findIndex(item => item.id === successionPlant.plant.id)=== -1){
           let plant = {...successionPlant.plant, ...successionPlant}
           delete plant.plant; 
           placeAble.push(plant);
         }
       }
     }
-    if(placeAble.length > 0)
+    if(placeAble.length > 0){
+      // for(let x = 0; x < placeAble.length; x++){
+      //   setChosenPlant(placeAble[x])
+      // }
       setChosenPlant(placeAble[0])
-    else
+    }else
       setChosenPlant(null)
     setPlaceablePlants(placeAble)
 
@@ -690,7 +892,7 @@ const GardenCalendarUI = ({rows, setRows, selectedPlant, setSelectedPlant}) => {
   const handleAddPlant = () => {
     let rowsArr = rows; 
     let selRow = rows[selectedRow];
-    selRow.push({ plant: selectedPlant, selectedRow, selectedWeekIndex, widthInWeeks: calculatePosition(selectedPlant)})
+    selRow.push({ plant: {...selectedPlant, id: uuidv4()}, selectedRow, selectedWeekIndex, widthInWeeks: calculatePosition(selectedPlant)})
     rowsArr[selectedRow] = selRow;
     setRows(rowsArr)
   }
