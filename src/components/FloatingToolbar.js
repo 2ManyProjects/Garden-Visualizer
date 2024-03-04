@@ -145,9 +145,9 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
         {selectedMeasurement && (
           <>
               {selectedMeasurement.points.length > 3 && 
-              <text fontWeight="bold" style={{ marginLeft: 2 }}>
-                  {`Area: ${calcArea(selectedMeasurement.points).toFixed(2)} sq ${gardenDimensions.unit}`}
-              </text>}
+              <Box><text fontWeight="bold" style={{ marginLeft: 2 }}>
+              {`Area: ${calcArea(selectedMeasurement.points).toFixed(2)} sq ${gardenDimensions.unit}`}
+          </text></Box>}
           </>
         )}
         {!selectedMeasurement && isGardenDefined && (

@@ -201,7 +201,7 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
     }
     succession.sort((a,b) => a.selectedWeekIndex >= b.selectedWeekIndex)
     setPlotSuccessionData(succession);
-    console.log(selectedMeasurement, succession);
+    // console.log(selectedMeasurement, succession);
     setStage(1);
     setChosenPlant(null);
   }
@@ -412,7 +412,7 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
   useEffect(()=> {
     calcWaterUsage();
   }, [eto])
-  console.log(plantWaterData, plotPlants);
+  // console.log(plantWaterData, plotPlants);
   return ( 
     <Box style={{ width: '100%', overflowY: 'hidden',  padding: '1rem' }}>
     <Typography variant="h5" align="center" gutterBottom>
@@ -459,16 +459,17 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
                 let plantRadius = row.orgCrownSpread / 2;
                 let plantCoverage = ((plantRadius * plantRadius) * Math.PI ) * quant;
                 let curMonth = months[0].name
-                let wkIndex = row.selectedWeekIndex;
-                for(let x = 0; x < months.length; x++){
-                  curMonth = months[x].name;
-                  wkIndex -= months[x].weeks
-                  if(wkIndex <= 0)
-                    break;
-                }
+                let wkIndex = quant > 0 ? plotPlants.filter(item => item.id === row.id)[0].selectedWeekIndex: 0;
+                if(wkIndex > 0)
+                  for(let x = 0; x < months.length; x++){
+                    curMonth = months[x].name;
+                    wkIndex -= months[x].weeks
+                    if(wkIndex <= 0)
+                      break;
+                  }
                 return (
                 <TableRow
-                  key={row.name}
+                  key={row.plantName}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell align="center" component="th" scope="row">
