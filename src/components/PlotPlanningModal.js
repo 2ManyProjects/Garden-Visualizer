@@ -420,6 +420,7 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
     </Typography>
     
     <Box align="center"  style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}> 
+        <Typography variant="body2">mm/day</Typography>
       <Grid container justifyContent="center" >
         {months.map((month, index) => (
           <Grid item xs key={index} style={{ textAlign: 'center' }}>
@@ -427,7 +428,7 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
             <Grid container sx={{paddingTop: '1vh'}}>
               <TextField
                 type='number'
-                label={'ETo (mm/day)'}
+                label={'ETo'}
                 value={eto[index]}
                 onChange={(e) => { 
                   let temp = [...eto];
@@ -443,14 +444,14 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
       {plantWaterData.length > 0 && <Box style={{ marginTop: '1rem' }}>
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
+            <TableHead >
               <TableRow>
-                <TableCell align="center">Plants / Init Month / Yield</TableCell>
-                <TableCell align="center">ID</TableCell>
-                <TableCell align="center">Quantity</TableCell>
-                <TableCell align="center">Crown Spread &nbsp;(m)</TableCell>
-                <TableCell align="center">Coverage &nbsp;(sqm)</TableCell>
-                <TableCell align="center">Total Water &nbsp;(L)</TableCell>
+                <TableCell sx={{fontWeight: 'bold'}} align="center">Plants / Init Month / Yield</TableCell>
+                <TableCell sx={{fontWeight: 'bold'}} align="center">ID</TableCell>
+                <TableCell sx={{fontWeight: 'bold'}} align="center">Quantity</TableCell>
+                <TableCell sx={{fontWeight: 'bold'}} align="center">Crown Spread &nbsp;(m)</TableCell>
+                <TableCell sx={{fontWeight: 'bold'}} align="center">Coverage &nbsp;(sqm)</TableCell>
+                <TableCell sx={{fontWeight: 'bold'}} align="center">Total Water &nbsp;(L)</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
