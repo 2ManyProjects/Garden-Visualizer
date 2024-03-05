@@ -594,6 +594,9 @@ const LineChart = () => {
           value={selectedOption}
           onChange={handleSelectChange}
           fullWidth
+          MenuProps={{
+            PaperProps: { sx: { maxHeight: 200 }}
+          }}          
         >
         {selectedOption && <MenuItem key={'asdwdad'} value={null}>Deselect Chart</MenuItem>}
           {chartConfigs?.map((option, index) => (

@@ -277,6 +277,9 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
             <Select
               sx={{maxWidth: 100}}
               value={chosenPlant || ''}
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }}
               onChange={(e) => {
                 setSelectedPlant(null);
                 if(!e.target.value){
@@ -308,6 +311,9 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
             {chosenPlant && 
             <Select
               sx={{maxWidth: 100}}
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }}
               value={yeild != null ? chosenPlant.yieldStructureArray[yeild].itemHarvested :  ''}
               onChange={(e) =>{  
                 setYield( chosenPlant.yieldStructureArray.findIndex(item => item.itemHarvested === e.target.value))
@@ -342,6 +348,9 @@ const GardenCalendar = ({selectedMeasurement, pixelsPerMeter, conversionFactors,
           <Box align="center" style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
               <Select
                 sx={{maxWidth: 100}}
+                MenuProps={{
+                  PaperProps: { sx: { maxHeight: 200 }}
+                }}
                 value={chosenPlant || ''}
                 onChange={(e) => {
                   setSelectedPlant(null);
@@ -436,7 +445,7 @@ const GardenWaterUsageUI = ({months, eto, setETO, calcWaterUsage, plantWaterData
                   setETO(temp)
                 }
                 } 
-              />     
+              />
             </Grid>  
           </Grid>
         ))}

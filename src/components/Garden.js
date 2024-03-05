@@ -1432,6 +1432,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           />
         )} 
         <MeasurementList 
+        isEditing={isEditing}
         setSelectedMeasurement={setSelectedMeasurement}
         measurementList={measurementList}
         adjustedEdgeVertSize={adjustedEdgeVertSize}
@@ -1540,6 +1541,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     {/* PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement}) */}
     {lastSelectedPlant && <PlantCardDetails setLastSelectedPlant={setLastSelectedPlant} selectedPlant={lastSelectedPlant} plantsInGarden={plantsInGarden} calculateCrownSpread={calculateCrownSpread} gardenDimensions={gardenDimensions}/>}
     {selectedMeasurement && <PlotCardDetails 
+      isEditing={isEditing}
       plantMacros={plantMacros}
       plantsInGarden={plantsInGarden}
       isInsidePolygon={isInsidePolygon}
@@ -1557,6 +1559,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     />}
         
     <FloatingToolbar 
+    isEditing={isEditing}
     setLocation={(coords) => {
       let sesh = JSON.parse(JSON.stringify(currentSession))
       sesh.data.coords = {lat: coords.lat, lon: coords.lon};

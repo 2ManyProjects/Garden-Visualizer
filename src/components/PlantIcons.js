@@ -23,6 +23,9 @@ const PlantIcons = ({isPlantSelectorEnabled, isEditing, maxHeight}) => {
         sx={{maxHeight: 50, width: '10vw'}}
         label="Plant"
         onChange={(e) => dispatch(setSelectedPlant(e.target.value))}
+        MenuProps={{
+          PaperProps: { sx: { maxHeight: 200 }}
+        }}
       >
         <MenuItem key={"Clear Selection"} value={undefined}>
           <ListItemText primary={"Clear Selection"} />

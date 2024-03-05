@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Select, MenuItem, Button, Box, Modal, TextField, Typography, Menu, IconButton } from '@mui/material';
+import { Select, FormControl, MenuItem, Button, Box, Modal, TextField, Typography, Menu, IconButton } from '@mui/material';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SaveIcon from '@mui/icons-material/Save';
@@ -10,9 +10,9 @@ import Shade from '@mui/icons-material/WbShade';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { EnvironmentalDataModal } from './EnvironmentalDataModal';
 import { SwatchesPicker } from 'react-color'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
-
-const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows, setMeasurementColor, isGardenDefined}) => {
+const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeasurement, handleDeleteMeasurement, handleClearMeasurement, handleAddMeasurement, setMeasurementList, calcArea, gardenDimensions, retrieveData, storeData, clear, handleDownload, session, setLocation, clearPlantData, showShadows, setShowShadows, setMeasurementColor, isGardenDefined, isEditing}) => {
   const [isVisible, setIsVisible] = useState(true);  
   const [open, setOpen] = useState(false);
   const [colour, setColour] = useState(null);
@@ -123,22 +123,38 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
               onClick={()=>{
                 setShowShadows(!showShadows)
               }}
-          />} */}
-          {measurementList.length > 0 && <Select
-            sx={{maxWidth: 100}}
-            value={selectedMeasurement || ''}
-            onChange={(e) => setSelectedMeasurement(e.target.value)}
-            disabled={selectedMeasurement?.addPoints}
-          >
-          {selectedMeasurement && <MenuItem key={-5} value={null}>
-             Deselect Plot
-          </MenuItem>}
-            {measurementList?.map(measurement => (
-              <MenuItem key={measurement.id} value={measurement}>
-                {measurement.name || measurement.id}
-              </MenuItem>
-            ))}
-          </Select>}
+          />}
+          
+          
+          
+              <IconButton onClick={() => toggleHideState()} color="success">
+                {!selectedMeasurement?.hide && <VisibilityIcon />}
+                {selectedMeasurement?.hide && <VisibilityOffIcon />}
+              </IconButton>
+          */}
+          {measurementList.length > 0 && 
+          <FormControl >
+            <Select
+              sx={{maxWidth: 100}}
+              value={selectedMeasurement || ''}
+              onChange={(e) => setSelectedMeasurement(e.target.value)}
+              disabled={selectedMeasurement?.addPoints}
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }}
+            >
+              {measurementList?.map(measurement => (
+                <MenuItem key={measurement.id} value={measurement}>
+                  {!measurement?.hide && <VisibilityIcon />}
+                  {measurement?.hide && <VisibilityOffIcon />}
+                  {measurement.name || measurement.id}
+                </MenuItem>
+              ))}
+            {selectedMeasurement && <MenuItem key={-5} value={null}>
+              Deselect Plot
+            </MenuItem>}
+            </Select>
+          </FormControl>}
         </Box>
 
 
@@ -152,7 +168,7 @@ const FloatingToolbar = ({ measurementList, selectedMeasurement, setSelectedMeas
         )}
         {!selectedMeasurement && isGardenDefined && (
           <>
-            <Button onClick={handleAddMeasurement}>Add Plot</Button>
+            <Button disabled={isEditing} onClick={handleAddMeasurement}>Add Plot</Button>
           </>
         )}
       </>

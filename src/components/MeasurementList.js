@@ -4,7 +4,7 @@ import Measurement from './Measurement';
 
 
 
-const MeasurementList = ({ measurementList, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, selectedMeasurement, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, widgetWidth, handleMeasurementWidget, setSelectedMeasurement }) => {
+const MeasurementList = ({ measurementList, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, selectedMeasurement, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, widgetWidth, handleMeasurementWidget, setSelectedMeasurement, isEditing }) => {
 
   return(
       <>
@@ -13,9 +13,11 @@ const MeasurementList = ({ measurementList, adjustedEdgeVertSize, adjustedStroke
         return(
           <Measurement 
           item={item} 
+          isEditing={isEditing}
           listIndex={listIndex}
           isSelected={isSelected} 
           setSelectedMeasurement={setSelectedMeasurement}
+          selectedMeasurement={selectedMeasurement}
           adjustedEdgeVertSize={adjustedEdgeVertSize}
           adjustedStrokeSize={adjustedStrokeSize}
           handlePointMouseDown={handlePointMouseDown} 

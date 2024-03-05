@@ -2,7 +2,7 @@ import React from 'react';
 
 
 
-const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, handleMeasurementWidget, widgetWidth, setSelectedMeasurement }) => { 
+const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjustedStrokeSize, handlePointMouseDown, conversionFactors, gardenDimensions, calculateDistance, adjustedFontSize, handleMeasurementWidget, widgetWidth, setSelectedMeasurement, selectedMeasurement, isEditing }) => { 
     let centerPt = null;
 
     if(isSelected && item.points.length > 2){
@@ -14,7 +14,8 @@ const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjust
         centerPt.x /= item.points.length;
         centerPt.y /= item.points.length; 
     } 
-
+    if(item.hide)
+        return null;
 
     return(
         <React.Fragment key={listIndex}>
@@ -22,9 +23,11 @@ const Measurement = ({ item, listIndex, isSelected, adjustedEdgeVertSize, adjust
         {item.points.length > 0 && (
             <polygon 
             onMouseDown={(e) =>{
-                if(!isSelected)
-                    setSelectedMeasurement(item)
-                else{
+                // console.log(selectedMeasurement)
+                if(!isSelected){
+                    if((!selectedMeasurement || !selectedMeasurement.addPoints) && !isEditing)
+                        setSelectedMeasurement(item)
+                }else{
                     handleMeasurementWidget(listIndex, e, "center", item)
                 }
             }}

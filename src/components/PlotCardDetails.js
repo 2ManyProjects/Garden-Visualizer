@@ -8,9 +8,10 @@ import CloseIcon from '@mui/icons-material/Close'
 import { SwatchesPicker } from 'react-color'
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import PlotPlanningModal from './PlotPlanningModal';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
-
-const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement, isInsidePolygon, plantsInGarden, plantMacros, setMeasurementColor, pixelsPerMeter, setMeasurementList}) => {
+const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensions, calculatePolygonArea, handleAddRemovePoints, handleClearMeasurement, handleDeleteMeasurement,setSelectedMeasurement, isInsidePolygon, plantsInGarden, plantMacros, setMeasurementColor, pixelsPerMeter, setMeasurementList, isEditing}) => {
     const [nutrientReq, setNutrientReq] = useState({ kReq: 0, nReq: 0 });
 
     const [open, setOpen] = useState(false);
@@ -109,18 +110,33 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
         setOpenPlanning(false);
     };
   
+    const toggleHideState = ( ) => {
+      let measurement = selectedMeasurement;
+      let bool = measurement.hide || false;
+      bool = !bool;
+      measurement.hide = bool;
+      setMeasurementList(list => list.map(item => {
+        if(item.id === measurement.id){
+          return measurement;
+        }else {
+          return item;
+        }
+      }))
+      setSelectedMeasurement(measurement); 
+    };
+  
     
     return (
       <Box sx={{ 
         // pointerEvents: 'none',
         position: 'fixed', 
         left: '80vw',
-        top: '56vh', 
+        top: '54vh', 
       }}> 
       <PlotPlanningModal pixelsPerMeter={pixelsPerMeter} conversionFactors={conversionFactors} gardenDimensions={gardenDimensions} selectedMeasurement={selectedMeasurement} open={openPlanning} closeModal={() => setOpenPlanning(false)} saveToMeasurement={saveToMeasurement}/>
        {/* <Button sx={{ pointerEvents: 'auto' }}>I am clickable</Button> */}
 
-      <Card variant="outlined" sx={{ width: '20vw',height: '35vh'}}>
+      <Card variant="outlined" sx={{ width: '20vw',height: '36vh'}}>
         <CardContent>
           <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'  }}>
               <IconButton fontSize='small' onClick={() => {setSelectedMeasurement(null)}} color="success">
@@ -132,6 +148,10 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
               Plot Details
             </Typography> 
+              <IconButton onClick={() => toggleHideState()} color="success">
+                {!selectedMeasurement?.hide && <VisibilityIcon />}
+                {selectedMeasurement?.hide && <VisibilityOffIcon />}
+              </IconButton>
 
           </Box>
           {/* {selectedMeasurement?.id && <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
@@ -161,7 +181,7 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
               <IconButton onClick={() => setShowColourPicker(true)} color="success">
                 <ColorLensIcon />
               </IconButton>
-          </Box> 
+          </Box>  
 
           {selectedMeasurement?.points.length > 2 && <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
             <Typography sx={{ fontSize: 14 }} color="text.secondary">
@@ -172,7 +192,7 @@ const PlotCardDetails = ({selectedMeasurement, conversionFactors, gardenDimensio
         <CardActions>
           <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
             <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-              <Button size="small" onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Done' : 'Add Points'}</Button>
+              <Button size="small" disabled={isEditing} onClick={handleAddRemovePoints}>{selectedMeasurement.addPoints ? 'Done' : 'Add Points'}</Button>
               <Button size="small" onClick={handleClearMeasurement}>Clear</Button>
             </Box> 
             {/* <Box sx={{display: 'flex', flexDirection: 'row'}}>

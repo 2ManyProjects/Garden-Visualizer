@@ -166,7 +166,10 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
       <Box sx={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', }}> 
         <FormControl sx={{paddingRight: 2,}}>
           <InputLabel>Unit</InputLabel>
-          <Select sx={{maxHeight: 50, width: '5vw'}}value={unit} onChange={(e) => setUnit(e.target.value)}>
+          <Select sx={{maxHeight: 50, width: '5vw'}}value={unit} onChange={(e) => setUnit(e.target.value)} 
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }}>
               <MenuItem value="cm">cm</MenuItem>
               <MenuItem value="m">m</MenuItem>
               <MenuItem value="in">in</MenuItem>
@@ -185,6 +188,9 @@ const TB = ({ showShadows, setShowShadows, setEditing, clearGarden, onGardenDime
             sx={{maxHeight: 50, minWidth: '10vw'}} 
             value={selectedPermRole}
             onChange={handlePermRoleChange}
+            MenuProps={{
+              PaperProps: { sx: { maxHeight: 200 }}
+            }}
           >
             {permRoles.map(permRole => <MenuItem key={permRole} value={permRole}>
               <ListItemText primary={permRole} />
@@ -648,7 +654,10 @@ const PlantSubmitModal = ({ open, handleClose }) => {
 
       <FormControl>
         <InputLabel>{"Crop Nutrient Uptake *" }</InputLabel>
-        <Select value={plantData["Crop Type"]} label="Crop Type *"  name="Crop Type" onChange={handleChange}>
+        <Select value={plantData["Crop Type"]} 
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }} label="Crop Type *"  name="Crop Type" onChange={handleChange}>
           {Object.keys(plantMacros?.plantMacroRequirements).map((item, index) => {
             let val = plantMacros?.plantMacroRequirements[item];
             let unit = plantMacros?.plantMacroRequirements[item].Unit;
@@ -675,6 +684,9 @@ const PlantSubmitModal = ({ open, handleClose }) => {
         <FormControl>
           <InputLabel>{"Perm Role *" }</InputLabel>
           <Select
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }}
               multiple
               label="Perm Role *" 
               name="Perm Role"
@@ -711,6 +723,9 @@ const PlantSubmitModal = ({ open, handleClose }) => {
         <FormControl>
           <InputLabel>{"Root System *" }</InputLabel>
           <Select
+              MenuProps={{
+                PaperProps: { sx: { maxHeight: 200 }}
+              }}
               label="Root System *" 
               name="Root System"
               error={!!errors["Root System"]} 
@@ -749,6 +764,9 @@ const PlantSubmitModal = ({ open, handleClose }) => {
             <FormControl>
               <InputLabel>{"Harvest Vol|Weight Unit *" }</InputLabel>
               <Select
+                  MenuProps={{
+                    PaperProps: { sx: { maxHeight: 200 }}
+                  }}
                   label="Harvest Unit *" 
                   name="harvestUnit"
                   error={!!errors["harvestUnit"]} 
@@ -772,6 +790,9 @@ const PlantSubmitModal = ({ open, handleClose }) => {
             <FormControl>
               <InputLabel>{"Time Unit (Peak/Lifetime Yeild)*" }</InputLabel>
               <Select
+                  MenuProps={{
+                    PaperProps: { sx: { maxHeight: 200 }}
+                  }}
                   label="Time Unit *" 
                   name="timeUnit"
                   error={!!errors["timeUnit"]} 
@@ -794,6 +815,9 @@ const PlantSubmitModal = ({ open, handleClose }) => {
             <FormControl>
               <InputLabel>{"Annual Harvest Time Unit *" }</InputLabel>
               <Select
+                  MenuProps={{
+                    PaperProps: { sx: { maxHeight: 200 }}
+                  }}
                   label="Annual Harvest Time Unit *" 
                   name="anYieldUnit"
                   error={!!errors["anYieldUnit"]} 

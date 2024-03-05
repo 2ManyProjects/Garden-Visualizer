@@ -67,6 +67,9 @@ const DualPurposeModal = ({ modalData, session, retrieveData }) => {
         <Typography variant="h6">{type === 'S' ? 'Save' : 'Load'}</Typography>
         <Select
           value={selectedOption}
+          MenuProps={{
+            PaperProps: { sx: { maxHeight: 200 }}
+          }}
           onChange={handleSelectChange}
           fullWidth
         >
