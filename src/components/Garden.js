@@ -1010,10 +1010,10 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   };
 
   
-  function CircleImage({ imageUrl, radius, cx, cy, rotation, role, index, fullOpacity, isLastSelected}) {
+  function CircleImage({ imageUrl, radius, adjustedFontSize, cx, cy, rotation, role, index, fullOpacity, isLastSelected, plantRef}) {
     const clipPathId = `clip-circle-${Math.random().toString(36).substr(2, 9)}`;
     const transformOrigin = `${radius}px ${radius}px`;
-  
+    // console.log(plantRef)
     return (
       <svg width={radius * 2} height={radius * 2} x={cx - radius} y={cy - radius} opacity={(fullOpacity) ? 1 : 0.33} onMouseDown={(e) => handlePointMouseDown(index, e, "plant")}>
         <defs>
@@ -1027,6 +1027,8 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
           radius={radius}
           clipPath={clipPathId}
           rotation={rotation}
+          adjustedFontSize={adjustedFontSize}
+          name={plantRef.nickname || plantRef.Name || ""}
           // style={{
           //   transformOrigin: transformOrigin
           // }}
@@ -1034,36 +1036,70 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
       </svg>
     );
   }
-  function ImageWithFallback({ imageUrl, radius, clipPathId, rotation }) {
+  function ImageWithFallback({ imageUrl, radius, clipPathId, rotation, name, adjustedFontSize }) {
     const [hasError, setHasError] = useState(false);
   
     if (hasError) {
       // Render a circle as the fallback
       return (
+      <svg width={radius * 2} height={radius * 2}>
         <circle
           cx={radius}
           cy={radius}
           r={radius}
           fill='rgba(36, 147, 36, 0.75)' 
         />
+        <text
+          x={radius}
+          y={radius}
+          fill="white"
+          textAnchor="middle"
+          alignmentBaseline="central"
+          style={{ fontSize: adjustedFontSize }} // Adjust font size based on the radius
+        >
+          {name}
+        </text>
+      </svg>
       );
     }
-  
+
     return (
-      <image
-        href={imageUrl}
-        width={radius * 2}
-        height={radius * 2}
-        clipPath={`url(#${clipPathId})`}
-        transform={`rotate(${rotation},${radius},${radius})`}
-        onError={(e) => {
-          setHasError(true)}}
-      />
+      
+      <svg width={radius * 2} height={radius * 2}>
+        <circle
+          cx={radius}
+          cy={radius}
+          r={radius}
+          fill='rgba(36, 147, 36, 0.75)' 
+        />
+        <text
+          x={radius}
+          y={radius}
+          fill="white"
+          textAnchor="middle"
+          alignmentBaseline="central"
+          style={{ fontSize: adjustedFontSize }}
+        >
+          {name}
+        </text>
+      </svg>
     );
+  
+    // return (
+    //   <image
+    //     href={imageUrl}
+    //     width={radius * 2}
+    //     height={radius * 2}
+    //     clipPath={`url(#${clipPathId})`}
+    //     transform={`rotate(${rotation},${radius},${radius})`}
+    //     onError={(e) => {
+    //       setHasError(true)}}
+    //   />
+    // );
   }
   
 
-  const renderPlants = ({lastSelectedPlant}) => {
+  const renderPlants = ({lastSelectedPlant, adjustedFontSize}) => {
     
     return plantsInGarden.map((plant, index) => {
     // let pathArr = plant.path.split("/")
@@ -1093,7 +1129,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     }
     return (
       <React.Fragment key={index}>
-        <CircleImage imageUrl={path} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={plant["Perm Role"].includes(selectedPermRole)} index={index} isLastSelected={isLastSelected}/>
+        <CircleImage imageUrl={path} adjustedFontSize={adjustedFontSize} plantRef={plant} radius={plant.crownSpread / 2} cx={plant.x} cy={plant.y} rotation={plant.rotation} role={plant["Perm Role"]} fullOpacity={plant["Perm Role"].includes(selectedPermRole)} index={index} isLastSelected={isLastSelected}/>
         {summerSolsticeShadowPolygon && (
           <polygon
             points={summerSolsticeShadowPolygon}
@@ -1447,7 +1483,7 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         handleMeasurementWidget={handleMeasurementWidget}
         />
         
-        {useMemo(() => renderPlants({lastSelectedPlant}), [lastSelectedPlant, plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
+        {useMemo(() => renderPlants({lastSelectedPlant, adjustedFontSize}), [lastSelectedPlant, plantsInGarden, showShadows, selectedPermRole, selectedPlant])}
         {/* {renderPlants({lastSelectedPlant})} */}
 
         {primaryLines.map((line, index) => (
