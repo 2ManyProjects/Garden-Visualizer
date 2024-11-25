@@ -13,9 +13,6 @@ import MeasurementList from './MeasurementList';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import { SwatchesPicker } from 'react-color'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import ColorLensIcon from '@mui/icons-material/ColorLens';
-import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
-import CloseIcon from '@mui/icons-material/Close';
 import PlantCardDetails from './PlantCardDetails';
 import PlotCardDetails from './PlotCardDetails';
 
@@ -85,7 +82,6 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
 
 
   const handleZoom = useCallback((delta) => {
-  
     setScale(prevScale => {
       let scaleFactor = (delta > 0 ? 1 : -1) * 0.1; //(delta > 0 ? 1.1 : 1 / 1.1);
   
@@ -93,7 +89,12 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
         scaleFactor /= 10;
       }
       const newScale = prevScale + scaleFactor; // Math.max(prevScale + scaleFactor, 0.1); 
-      setGlobalScale(parseFloat(newScale.toFixed(5)));
+      if(parseFloat(newScale.toFixed(5)) === 0){
+
+        setGlobalScale(parseFloat(prevScale.toFixed(5))); 
+        return prevScale;
+      }
+      setGlobalScale(parseFloat(newScale.toFixed(5))); 
       return parseFloat(newScale.toFixed(5));
     });
   }, [setScale, viewBox, setViewBox]);
@@ -103,28 +104,35 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   const handleWheel = (event) => {
     const scale = 0.1; // Determine the scale of zoom
     const delta = event.deltaY * 0.01; // Normalizing the wheel speed
-
-    // Calculate the new width and height
-    const newWidth = viewBox.width * (1 + delta * scale);
-    const newHeight = viewBox.height * (1 + delta * scale);
-
-    // Calculate the new X and Y based on the mouse position to zoom into the cursor point
-    const rect = event.currentTarget.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left; // Mouse X position within the element
-    const mouseY = event.clientY - rect.top;  // Mouse Y position within the element
-
-    // Adjust the viewBox position by the same proportion as the width/height
-    const dx = ((viewBox.width - newWidth) / viewBox.width) * (mouseX / rect.width);
-    const dy = ((viewBox.height - newHeight) / viewBox.height) * (mouseY / rect.height);
-
-    setViewBox(prevViewBox => ({
-      x: prevViewBox.x + dx,
-      y: prevViewBox.y + dy,
-      width: newWidth,
-      height: newHeight
-    }));
+ 
+    if(delta > 0){
+      handleZoom(-1)
+    }else {
+      handleZoom(1)
+    }
     event.stopPropagation();
-    event.preventDefault();
+    return
+    // Calculate the new width and height
+    // const newWidth = viewBox.width * (1 + delta * scale);
+    // const newHeight = viewBox.height * (1 + delta * scale);
+
+    // // Calculate the new X and Y based on the mouse position to zoom into the cursor point
+    // const rect = event.currentTarget.getBoundingClientRect();
+    // const mouseX = event.clientX - rect.left; // Mouse X position within the element
+    // const mouseY = event.clientY - rect.top;  // Mouse Y position within the element
+
+    // // Adjust the viewBox position by the same proportion as the width/height
+    // const dx = ((viewBox.width - newWidth) / viewBox.width) * (mouseX / rect.width);
+    // const dy = ((viewBox.height - newHeight) / viewBox.height) * (mouseY / rect.height);
+
+    // setViewBox(prevViewBox => ({
+    //   x: prevViewBox.x + dx,
+    //   y: prevViewBox.y + dy,
+    //   width: newWidth,
+    //   height: newHeight
+    // }));
+    // event.stopPropagation();
+    // event.preventDefault();
   };
 
   
@@ -1042,24 +1050,24 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
     if (hasError) {
       // Render a circle as the fallback
       return (
-      <svg width={radius * 2} height={radius * 2}>
-        <circle
-          cx={radius}
-          cy={radius}
-          r={radius}
-          fill='rgba(36, 147, 36, 0.75)' 
-        />
-        <text
-          x={radius}
-          y={radius}
-          fill="white"
-          textAnchor="middle"
-          alignmentBaseline="central"
-          style={{ fontSize: adjustedFontSize }} // Adjust font size based on the radius
-        >
-          {name}
-        </text>
-      </svg>
+        <svg width={radius * 2} height={radius * 2}>
+          <circle
+            cx={radius}
+            cy={radius}
+            r={radius}
+            fill='rgba(36, 147, 36, 0.75)' 
+          />
+          <text
+            x={radius}
+            y={radius}
+            fill="white"
+            textAnchor="middle"
+            alignmentBaseline="central"
+            style={{ fontSize: adjustedFontSize }} // Adjust font size based on the radius
+          >
+            {name}
+          </text>
+        </svg>
       );
     }
 
@@ -1282,11 +1290,12 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
   const areaInPixels = calculatePolygonArea(points);
 
   const baseFontSize = 8; // Base font size in pixels
-  const baseEdgeVertSize = 5;
+  const baseEdgeVertSize = 2;
   const baseStrokeSize = 2;
   const textOffset = 180;
+  // console.log(scale, baseFontSize, baseFontSize / (scale), (1/scale) * 10)
   let adjustedFontSize = Math.max(baseFontSize / (scale), (1/scale) * 10);
-  let adjustedEdgeVertSize = Math.min(baseEdgeVertSize / (scale*scale), 20);
+  let adjustedEdgeVertSize = Math.max(baseEdgeVertSize / (scale), (1/scale) * 5); //Math.min(baseEdgeVertSize / (scale*scale), 20);
   let adjustedStrokeSize = baseStrokeSize / (scale);
 
   // 10 px per m , 10x 10 per m2 
@@ -1451,10 +1460,17 @@ const Garden = ({ showShadows, setShowShadows, isEditing, clearGarden, gardenDim
 
           return (
             <g key={index}>
-              <line x1={point.x} y1={point.y} x2={nextPoint.x} y2={nextPoint.y} /* ...other line properties... */ />
-              <text x={midX} y={midY} style={{ fontSize: `${adjustedFontSize}px` }}>
-                {distance}
-              </text>
+              <line x1={point.x} y1={point.y} x2={nextPoint.x} y2={nextPoint.y} style={{  strokeWidth: adjustedStrokeSize, stroke: 'black', }}/>
+              <rect 
+                x={midX - (adjustedFontSize * 0.5)} 
+                y={midY - (adjustedFontSize * 1.4) }
+                width={adjustedFontSize * 2.5} 
+                height={adjustedFontSize * 1.2} 
+                fill="white"
+              />
+              <text x={midX - (adjustedFontSize / 2) } y={midY - (adjustedFontSize / 2) } style={{ fontSize: `${adjustedFontSize}px`, stroke: 'red', backgroundColor: 'white' }}>
+                  {distance}
+                </text>
             </g>
           );
         })}
